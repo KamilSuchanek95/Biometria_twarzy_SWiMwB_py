@@ -1,3 +1,4 @@
+
 #import OpenCV module
 import cv2
 import os
@@ -5,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import ipdb
 
-subjects = ['kamil', 'nieznany1', 'kolegaAsi']
+subjects = ['kamil', 'nieznany1', 'kolegaAsi', 'michal']
 #function to detect face
 def detect_face (img):
 	#convert the test image to gray image
@@ -58,8 +59,8 @@ def prepare_training_data(data_folder_path):
 			#read image
 			image = cv2.imread(image_path)
 			#display an image window to show the image
-			cv2.imshow("Training on image...", image)
-			cv2.waitKey(100)
+			# cv2.imshow("Training on image...", image)
+			# cv2.waitKey(100)
 			#detect face
 			face, rect = detect_face(image)
 			#------STEP-4--------
@@ -69,9 +70,9 @@ def prepare_training_data(data_folder_path):
 				faces.append(face)
 				#add label for this face
 				labels.append(label)
-				cv2.destroyAllWindows()
-				cv2.waitKey(1)
-				cv2.destroyAllWindows()
+				# cv2.destroyAllWindows()
+				# cv2.waitKey(1)
+				# cv2.destroyAllWindows()
 	return faces, labels
 
 
@@ -119,31 +120,39 @@ def predict(test_img):
 	draw_rectangle(img, rect)
 	#draw name of predicted person
 	draw_text(img, label_text, rect[0], rect[1]-5)
-	return img, how_much
+	return img, how_much, label_text
 
-#ipdb.set_trace()
+# ipdb.set_trace()
 
-#load test images
+# load test images
 test_img1 = cv2.imread("test_images/test1_kamil.jpg")
-test_img2 = cv2.imread("test_images/test1_kolegaAsi.jpg")
-#perform a prediction
-predicted_img1 = predict(test_img1)
-predicted_img2 = predict(test_img2)
+test_img2 = cv2.imread("test_images/test1_michal.jpg")
+test_img3 = cv2.imread("test_images/jakasBaba1.jpg")
+test_img4 = cv2.imread("test_images/lysyfacet.jpeg")
+test_img5 = cv2.imread("test_images/test1_kolegaAsi.jpg")
+test_img6 = cv2.imread("test_images/test1_nieznany1.jpg")
+# perform a prediction
+predicted_img1, how_much1, who1 = predict(test_img1)
+predicted_img2, how_much2, who2 = predict(test_img2)
+predicted_img3, how_much3, who3 = predict(test_img3)
+predicted_img4, how_much4, who4 = predict(test_img4)
+predicted_img5, how_much5, who5 = predict(test_img5)
+predicted_img6, how_much6, who6 = predict(test_img6)
+print(f'kamil: {how_much1:f}, rozpoznano:{who1:s}\nmichal: {how_much2:f}, rozpoznano:{who2:s}\njakasBaba: {how_much3:f}, rozpoznano:{who3:s}\nlysyFacet: {how_much4:f}, rozpoznano:{who4:s}\nkolegaAsi: {how_much5:f}, rozpoznano:{who5:s}\nnieznany: {how_much6:f}, rozpoznano:{who6:s}\n')
 print("Prediction complete")
-#create a figure of 2 plots (one for each test image)
-f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
-#display test image1 result
-ax1.imshow(cv2.cvtColor(predicted_img1, cv2.COLOR_BGR2RGB))
-#display test image2 result
-ax2.imshow(cv2.cvtColor(predicted_img2, cv2.COLOR_BGR2RGB))
-#display both images
-cv2.imshow("Czy to Kamil", predicted_img1)
-cv2.imshow("Czy to kolega Asi", predicted_img2)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-cv2.waitKey(1)
-cv2.destroyAllWindows()
+# create a figure of 2 plots (one for each test image)
+# f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+# display test image1 result
+# ax1.imshow(cv2.cvtColor(predicted_img1, cv2.COLOR_BGR2RGB))
+# display test image2 result
+# ax2.imshow(cv2.cvtColor(predicted_img2, cv2.COLOR_BGR2RGB))
+# display both images
+#cv2.imshow("Czy to Kamil", predicted_img1)
+#cv2.imshow("Czy to kolega Asi", predicted_img2)
+#cv2.waitKey(0)
+#cv2.destroyAllWindows()
+#cv2.waitKey(1)
+#cv2.destroyAllWindows()
 
 # zapisanie modelu
 face_recognizer.save('my_model.xml')  
-ipdb.set_trace()
