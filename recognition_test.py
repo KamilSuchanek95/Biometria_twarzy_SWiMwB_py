@@ -1,158 +1,127 @@
-
-#import OpenCV module
 import cv2
 import os
 import numpy as np
-import matplotlib.pyplot as plt
-import ipdb
 
+# lista rozpoznawalnych osob
 subjects = ['kamil', 'nieznany1', 'kolegaAsi', 'michal']
-#function to detect face
+
+# wykrywanie twarzy i zwrocenie ROI w skali szarosci
 def detect_face (img):
-	#convert the test image to gray image
+	# konwersja na skale szarosci
 	gray = cv2.cvtColor (img, cv2.COLOR_BGR2GRAY)
-	#load OpenCV face detector
+	# załadowanie klasyfikatora
 	face_cas = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-	faces = face_cas.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=4);
-	#if no faces are detected then return image
+	# wykrycie twarzy
+	faces = face_cas.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=4)
+	# jesli nie wykryto twarzy zwroc None
 	if (len(faces) == 0):
 		return None, None
-	#extract the face
-	(x, y, w, h) = faces [0]
-	#return only the face part
-	return gray[y: y+w, x: x+h], faces [0]
+	# koordynaty ROI
+	(x, y, w, h) = faces[0]
+	# zwroc ROI w skali szarości oraz koordynaty
+	return gray[y: y+w, x: x+h], faces[0]
 
 
-#this function will read all persons' training images, detect face #from each image
-#and will return two lists of exactly same size, one list
+# przygotowanie wykrytych twarzy do uczenia modelu
 def prepare_training_data(data_folder_path):
-	#------STEP-1--------
-	#get the directories (one directory for each subject) in data folder
+	# w naszym folderze training_images beda foldery s0 s1 s2 s3 dla kazdej osoby ktora chcemy rozpoznawac,
+	# oraz dla nieznanych, ktorych mozna zdefiniowac jako "typowe" nieznane twarze z bardzo malym zbiorem uczacym.
+	# ewentualne wykluczenie "nieznanych" mozna tez oprzec o zbyt duza niepewnosc zwracana jako "how_much".
+	# Warto po przeszkoleniu modelu, wygenerować "typowe" wartosci niepewnosci dla predykcji obrazow testowych, aby
+	# potem sugerowac sie nimi w celu stwierdzenia, czy niepewnosc jest dosc mala aby wskazanie konkretnej tozsamosci
+	# bylo wiarygodne.
 	dirs = os.listdir(data_folder_path)
 	faces = []
 	labels = []
 	for dir_name in dirs:
-		#our subject directories start with letter 's' so
-		#ignore any non-relevant directories if any
-		if not dir_name.startswith("s"):
-			continue;
-		#------STEP-2--------
-		#extract label number of subject from dir_name
-		#format of dir name = slabel
-		#, so removing letter 's' from dir_name will give us label
+		# zakladamy, ze kazdy folder ma w nazwie tylko jedna litere 's' a po niej numer zatwierdzanej tozsamosci,
+		# zastepujemy 's' => '' i uzyskujemy identyfikator tozsamosci.
 		label = int(dir_name.replace("s", ""))
-		#build path of directory containin images for current subject subject
-		#sample subject_dir_path = "training-data/s1"
+		# skladanie sciezki do pliku ./training_images/s0 ...
 		subject_dir_path = data_folder_path + "/" + dir_name
-		#get the images names that are inside the given subject directory
+		# odczytujemy liste zdjec w lokacji wskazanej w linii wyzej
 		subject_images_names = os.listdir(subject_dir_path)
-		#------STEP-3--------
-		#go through each image name, read image,
-		#detect face and add face to list of faces
+		# petla po obrazach w celu detekcji twarzy, w przypadku jej wykrycia, dodanie owej do listy wykrytych, owa lista
+		# posluzy do nauki modelu
 		for image_name in subject_images_names:
-			#ignore system files like .DS_Store
+			# ignorujemy pliki systemowe '.' '..'
 			if image_name.startswith("."):
 				continue;
-			#build image path
-			#sample image path = training-data/s1/1.pgm
+			# skladamy sciezke do zdjecia z nazwa owego
 			image_path = subject_dir_path + "/" + image_name
-			#read image
+			# wczytanie owego do zmiennej
 			image = cv2.imread(image_path)
-			#display an image window to show the image
-			# cv2.imshow("Training on image...", image)
-			# cv2.waitKey(100)
-			#detect face
+			# wykrycie twarzy
 			face, rect = detect_face(image)
-			#------STEP-4--------
-			#we will ignore faces that are not detected
+			# jeśli w istocie ją wykryto, dodawanie do listy twarzy oraz jej identyfikatora
 			if face is not None:
-				#add face to list of faces
+				# dodanie ROI twarzy do listy
 				faces.append(face)
-				#add label for this face
+				# dodanie identyfikatora twarzy
 				labels.append(label)
-				# cv2.destroyAllWindows()
-				# cv2.waitKey(1)
-				# cv2.destroyAllWindows()
+	# zwroc twarze z identyfikatorami
 	return faces, labels
 
 
-#let's first prepare our training data
-#data will be in two lists of same size
-#one list will contain all the faces
-#and other list will contain respective labels for each face
-print("Preparing data...")
-faces, labels = prepare_training_data("training_images")
-print("Data prepared")
-#print total faces and labels
-print("Total faces: ", len(faces))
-print("Total labels: ", len(labels))
-#create our LBPH face recognizer
-face_recognizer = cv2.face.LBPHFaceRecognizer_create()
-#train our face recognizer of our training faces
-face_recognizer.train(faces, np.array(labels))
-
-#ipdb.set_trace()
-#function to draw rectangle on image
-#according to given (x, y) coordinates and
-#given width and heigh
+# rysowanie kwadratu
 def draw_rectangle(img, rect):
 	(x, y, w, h) = rect
 	cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
 
-#function to draw text on give image starting from
-#passed (x, y) coordinates.
+
+# podpisywanie kwadratu
 def draw_text(img, text, x, y):
 	cv2.putText(img, text, (x, y), cv2.FONT_HERSHEY_PLAIN, 1.5, (0, 255, 0), 2)
 
-#this function recognizes the person in image passed
-#and draws a rectangle around detected face with name of the subject
+
+# rozpoznawanie osoby na zdjeciu i podpisywanie
 def predict(test_img):
-	#make a copy of the image as we don't want to chang original image
-	img = test_img.copy()
-	#detect face from the image
-	face, rect = detect_face(img)
-	#predict the image using our face recognizer
-	label, how_much = face_recognizer.predict(face)
-	#get name of respective label returned by face recognizer
-	#ipdb.set_trace()
-	label_text = subjects[label]
-	#draw a rectangle around face detected
+	img = test_img.copy() # kopia obrazu
+	face, rect = detect_face(img) # wykrywanie twarzy
+	label, how_much = face_recognizer.predict(face) # rozpoznawanie
+	label_text = subjects[label] # odszukanie tozsamosci po identyfikatorze
+	# obrysowanie i podpisanie
 	draw_rectangle(img, rect)
-	#draw name of predicted person
 	draw_text(img, label_text, rect[0], rect[1]-5)
-	return img, how_much, label_text
+	return img, how_much, label_text # zwróć podpisany obraz, niepewnosc oraz tozsamosc
 
-# ipdb.set_trace()
+# przygotowanie danych do uczenia
+faces, labels = prepare_training_data("training_images")
 
-# load test images
+# utworzenie obiektu klasyfikatora LBPH
+face_recognizer = cv2.face.LBPHFaceRecognizer_create()
+# szkolenie modelu
+face_recognizer.train(faces, np.array(labels))
+
+# obrazy testowe
 test_img1 = cv2.imread("test_images/test1_kamil.jpg")
 test_img2 = cv2.imread("test_images/test1_michal.jpg")
 test_img3 = cv2.imread("test_images/jakasBaba1.jpg")
 test_img4 = cv2.imread("test_images/lysyfacet.jpeg")
 test_img5 = cv2.imread("test_images/test1_kolegaAsi.jpg")
 test_img6 = cv2.imread("test_images/test1_nieznany1.jpg")
-# perform a prediction
+# sprawdzenie
 predicted_img1, how_much1, who1 = predict(test_img1)
 predicted_img2, how_much2, who2 = predict(test_img2)
 predicted_img3, how_much3, who3 = predict(test_img3)
 predicted_img4, how_much4, who4 = predict(test_img4)
 predicted_img5, how_much5, who5 = predict(test_img5)
 predicted_img6, how_much6, who6 = predict(test_img6)
-print(f'kamil: {how_much1:f}, rozpoznano:{who1:s}\nmichal: {how_much2:f}, rozpoznano:{who2:s}\njakasBaba: {how_much3:f}, rozpoznano:{who3:s}\nlysyFacet: {how_much4:f}, rozpoznano:{who4:s}\nkolegaAsi: {how_much5:f}, rozpoznano:{who5:s}\nnieznany: {how_much6:f}, rozpoznano:{who6:s}\n')
-print("Prediction complete")
-# create a figure of 2 plots (one for each test image)
-# f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
-# display test image1 result
-# ax1.imshow(cv2.cvtColor(predicted_img1, cv2.COLOR_BGR2RGB))
-# display test image2 result
-# ax2.imshow(cv2.cvtColor(predicted_img2, cv2.COLOR_BGR2RGB))
-# display both images
-#cv2.imshow("Czy to Kamil", predicted_img1)
-#cv2.imshow("Czy to kolega Asi", predicted_img2)
-#cv2.waitKey(0)
-#cv2.destroyAllWindows()
-#cv2.waitKey(1)
-#cv2.destroyAllWindows()
+print(f'kamil:		{how_much1:f},	rozpoznano:{who1:s}\n'
+	  f'michal:		{how_much2:f},	rozpoznano:{who2:s}\n'
+	  f'jakasBaba:	{how_much3:f},	rozpoznano:{who3:s}\n'
+	  f'lysyFacet:	{how_much4:f},	rozpoznano:{who4:s}\n'
+	  f'kolegaAsi:	{how_much5:f},	rozpoznano:{who5:s}\n'
+	  f'nieznany:	{how_much6:f},	rozpoznano:{who6:s}\n')
+print("done!")
 
-# zapisanie modelu
-face_recognizer.save('my_model.xml')  
+
+# f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+# ax1.imshow(cv2.cvtColor(predicted_img1, cv2.COLOR_BGR2RGB))
+# ax2.imshow(cv2.cvtColor(predicted_img2, cv2.COLOR_BGR2RGB))
+# cv2.imshow("Czy to Kamil", predicted_img1)
+# cv2.imshow("Czy to kolega Asi", predicted_img2)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+# cv2.waitKey(1)
+# cv2.destroyAllWindows()
