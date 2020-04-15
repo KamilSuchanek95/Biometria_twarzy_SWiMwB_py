@@ -50,8 +50,8 @@ class Face_detector:
     def detect_face(self):
         img = cv2.imread('images\\image_object_' + str(id(self)) + '.jpg')
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        scaleFactor = 1.01
-        minNeighbors = 100
+        scaleFactor = 1.3
+        minNeighbors = 4
         self.faces = self.face_cascade.detectMultiScale(gray, scaleFactor, minNeighbors)
         return self.faces
 
