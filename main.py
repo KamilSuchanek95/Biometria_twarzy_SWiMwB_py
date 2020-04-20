@@ -1,9 +1,8 @@
 import SWiMwB as FD
 
-fd = FD.Face_detector()
-fd.get_photo()
-print(fd.face_cascade)
-fd.detect_face()
+fd = FD.Face_detector() # obiekt detektora
+fd.get_photo() # pobieranie zdjecia z kamerki
+fd.detect_face() # wykrywanie twarzy
 fd.show_detected_faces()
 
 
