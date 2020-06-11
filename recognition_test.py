@@ -17,30 +17,53 @@ face_recognizer.read('models/lbph/model_BioID_LBPH-2020-06-10_10-20-11.xml')
 # face_recognizer.read('models/eigenfaces/model_BioID_eigenfaces_256-2020-06-10_10-05-31.xml')
 """ ... @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ """
 
-### testy i srednie p
-p = 0
+### testy i odleglosci pozytywne/negatywne
+p = []
+n = []
+#with open("models/fisherfaces/p-positive_BioIDFisherfaces_256-2020-06-09_06-06-30" + ".csv", "a") as file:
+#with open("models/eigenfaces/p-positive_BioID_eigenfaces_256-2020-06-10_10-05-31" + ".csv", "a") as file:
+with open("models/lbph/p-positive_BioID_LBPH-2020-06-10_10-20-11" + ".csv", "a") as file:
+	file.write('subject, minimum, mean, maximum\n')
+
+#with open("models/fisherfaces/p-negative_BioIDFisherfaces_256-2020-06-09_06-06-30" + ".csv", "a") as file:
+#with open("models/eigenfaces/p-negative_BioID_eigenfaces_256-2020-06-10_10-05-31" + ".csv", "a") as file:
+with open("models/lbph/p-negative_BioID_LBPH-2020-06-10_10-20-11" + ".csv", "a") as file:
+	file.write('subject, minimum, mean, maximum\n')
 for subject in os.listdir('test_images'):
 #	if subject.startswith("."):
 #		continue;
 	oo = os.listdir('test_images/' + subject)
 	for t in oo:
 		test_img = cv2.imread("test_images/" + subject + "/" + t)
-		predicted_img, how_much, who = TS.predict(test_img, face_recognizer, subjects, eq = 1)
+		predicted_img, how_much, who = TS.predict(test_img, face_recognizer, subjects, eq = 0)
 		if predicted_img is None:
 			continue
-		p = p + how_much
-		print(f'{subject:s}:	{how_much:f},	rozpoznano:{who:s}\n')
+		if who == subject:
+			p.append(how_much)
+		else:
+			n.append(how_much)
+		# print(f'{subject:s}:	{how_much:f},	rozpoznano:{who:s}\n')
 		# cv2.imshow("Kto to?", predicted_img)
 		# cv2.waitKey(0)
 		#with open("models/fisherfaces/test_BioIDFisherfaces_256-2020-06-09_06-06-30" + ".csv", "a") as file:
 		#with open("models/eigenfaces/test_BioID_eigenfaces_256-2020-06-10_10-05-31" + ".csv", "a") as file:
-		with open("models/lbph/test_BioID_LBPH-2020-06-10_10-20-11" + ".csv", "a") as file:
-			file.write(subject + ',' + who + "\n")
-	p = p / len(oo)
-	#with open("models/fisherfaces/p-mean_BioIDFisherfaces_256-2020-06-09_06-06-30" + ".csv", "a") as file:
-	#with open("models/eigenfaces/p-mean_BioID_eigenfaces_256-2020-06-10_10-05-31" + ".csv", "a") as file:
-	with open("models/lbph/p-mean_BioID_LBPH-2020-06-10_10-20-11" + ".csv", "a") as file:
-	 	file.write(subject + ',' + str(p) + "\n")
-	p = 0
+		#with open("models/lbph/test_BioID_LBPH-2020-06-10_10-20-11" + ".csv", "a") as file:
+		#	file.write(subject + ',' + who + "\n")
+	#with open("models/fisherfaces/p-positive_BioIDFisherfaces_256-2020-06-09_06-06-30" + ".csv", "a") as file:
+	#with open("models/eigenfaces/p-positive_BioID_eigenfaces_256-2020-06-10_10-05-31" + ".csv", "a") as file:
+	with open("models/lbph/p-positive_BioID_LBPH-2020-06-10_10-20-11" + ".csv", "a") as file:
+		if len(p) > 0:
+	 		file.write(subject + ',' + str(np.min(p)) + ',' + str(np.mean(p)) + ',' + str(np.max(p)) + "\n")
+		else:
+	 		file.write(subject + ',0,0,0\n')
+	#with open("models/fisherfaces/p-negative_BioIDFisherfaces_256-2020-06-09_06-06-30" + ".csv", "a") as file:
+	#with open("models/eigenfaces/p-negative_BioID_eigenfaces_256-2020-06-10_10-05-31" + ".csv", "a") as file:
+	with open("models/lbph/p-negative_BioID_LBPH-2020-06-10_10-20-11" + ".csv", "a") as file:
+		if len(n) > 0:
+	 		file.write(subject + ',' + str(np.min(n)) + ',' + str(np.mean(n)) + ',' + str(np.max(n)) + "\n")
+		else:
+	 		file.write(subject + ',0,0,0\n')
+	p = []
+	n = []
 print('koniec testow')
 #ipdb.set_trace()

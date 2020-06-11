@@ -220,3 +220,5 @@ def predict_eigenfaces(test_img):
     draw_rectangle(img, rect)
     draw_text(img, label_text, rect[0], rect[1]-5)
     return img, how_much, label_text # zwróć podpisany obraz, niepewnosc oraz tozsamosc
+
+
