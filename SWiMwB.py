@@ -12,8 +12,9 @@ class Face_detector:
 
     def __init__(self):
         self.photo = []
-        self.faces = []
- 
+        self.face = []
+        self.roi = []
+
     face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
     eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
 
@@ -50,37 +51,25 @@ class Face_detector:
     def detect_face(self):
         img = cv2.imread('images\\image_object_' + str(id(self)) + '.jpg')
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        scaleFactor = 1.3
-        minNeighbors = 4
-        self.faces = self.face_cascade.detectMultiScale(gray, scaleFactor, minNeighbors)
-        return self.faces
-
-    def show_detected_faces(self): # to pozostałość po testowaniu, póki co zostanie.
-        img = cv2.imread('images/image_object_' + str(id(self)) + '.jpg')
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        for (x,y,w,h) in self.faces:
-            cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
-            roi_gray = gray[y:y+h, x:x+w]
-            roi_color = img[y:y+h, x:x+w]
-            eyes = self.eye_cascade.detectMultiScale(roi_gray)
-            for (ex,ey,ew,eh) in eyes:
-                cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
-        cv2.imshow('Wynik detekcji', img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-        print('done [show_detected_faces]')
+        faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=4)
+        # jesli nie wykryto twarzy zwroc None
+        if (len(faces) == 0):
+            return None, None
+        # koordynaty ROI
+        tr = np.transpose(faces)[2]
+        max_width_roi_idx, = np.where(np.max(tr) == tr)
+        (x, y, w, h) = faces[max_width_roi_idx[0]]
+        # zwroc ROI w skali szarości oraz koordynaty
+        self.roi = gray[y: y + w, x: x + h]
+        self.face = faces[0]
+        return self.roi, self.face
 
 
-class Face_recognitor:
+class Face_recognitor(Face_detector):
 
     def __init__(self):
         self.photo = []
         self.faces = []
- 
-    face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-    eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
-
-
 
 def detect_face (img):
     # konwersja na skale szarosci

@@ -17,7 +17,9 @@ def detect_face (img):
 	if (len(faces) == 0):
 		return None, None
 	# koordynaty ROI
-	(x, y, w, h) = faces[0]
+	tr = np.transpose(faces)[2]
+	max_width_roi_idx, = np.where(np.max(tr) == tr)
+	(x, y, w, h) = faces[max_width_roi_idx[0]]
 	# zwroc ROI w skali szarości oraz koordynaty
 	return gray[y: y+w, x: x+h], faces[0]
 
@@ -94,15 +96,15 @@ def predict(test_img, face_recognizer, subjects, eq = 0):
 	draw_text(img, label_text, rect[0], rect[1]-5)
 	return img, how_much, label_text # zwróć podpisany obraz, niepewnosc oraz tozsamosc
 
-face_cas = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-img = cv2.imread("test_images/s6/test.jpg")
-gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-faces = face_cas.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=4)
-for (x,y,w,h) in faces:
-	cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
-cv2.imshow('Wynik detekcji', img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-
-ipdb.set_trace()
+# face_cas = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+# img = cv2.imread("test_images/s6/test.jpg")
+# gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+# faces = face_cas.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=4)
+# for (x,y,w,h) in faces:
+# 	cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
+# cv2.imshow('Wynik detekcji', img)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+#
+#
+# ipdb.set_trace()
