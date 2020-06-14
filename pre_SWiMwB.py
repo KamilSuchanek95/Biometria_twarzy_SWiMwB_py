@@ -1,15 +1,13 @@
 import cv2
 import os
 import numpy as np
-import ipdb
-import datetime
 
 # wykrywanie twarzy i zwrocenie ROI w skali szarosci
 def detect_face (img):
 	# konwersja na skale szarosci
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	# załadowanie klasyfikatora
-	face_cas = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+	face_cas = cv2.CascadeClassifier('models/haarcascade_frontalface_default.xml')
 	# wykrycie twarzy
 	faces = face_cas.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=4)
 
@@ -105,6 +103,4 @@ def predict(test_img, face_recognizer, subjects, eq = 0):
 # cv2.imshow('Wynik detekcji', img)
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
-#
-#
-# ipdb.set_trace()
+
