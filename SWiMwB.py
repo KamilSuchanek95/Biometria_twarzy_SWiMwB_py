@@ -61,7 +61,7 @@ class Face_detector:
         faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=4)
         # jesli nie wykryto twarzy zwroc None
         if (len(faces) == 0):
-            return None, None
+            return None
         # koordynaty ROI
         tr = np.transpose(faces)[2]
         max_width_roi_idx, = np.where(np.max(tr) == tr)
@@ -74,14 +74,16 @@ class Face_detector:
 class Face_recognitor():
 
     def __init__(self, algorithm='lbph'):
-        if(algorithm.lower == 'eigenface'):
+        self.algorithm = algorithm.lower()
+        if(self.algorithm == 'eigenface'):
             self.face_recognizer = cv2.face.EigenFaceRecognizer_create()
-        elif(algorithm.lower == 'fisherface'):
+        elif(self.algorithm == 'fisherface'):
             self.face_recognizer = cv2.face.FisherFaceRecognizer_create()
         else:
             self.face_recognizer = cv2.face.LBPHFaceRecognizer_create()
         self.face_detector = Face_detector()
         self.subjects = []
+
 
 
     def read_model(self, model_path, subjects_path):
@@ -130,13 +132,26 @@ class Face_recognitor():
                 if face is not None:
                     if eq:
                         face = cv2.resize(face, (256, 256))
-                    # dodanie ROI twarzy do listy
                     faces.append(face)
-                    # dodanie identyfikatora twarzy
                     labels.append(label)
         # zwroc twarze z identyfikatorami
         return faces, labels, self.subjects
 
+
+    def train_model(self):
+        if self.algorithm == 'lbph':
+            faces, labels, subjects = self.prepare_training_data("training_images", eq=0)
+        else:
+            faces, labels, subjects = self.prepare_training_data("training_images", eq=1)
+        self.face_recognizer.train(faces, np.array(labels))
+        # ts = datetime.datetime.now()
+        # ipdb.set_trace();
+        # date_str = "{}".format(ts.strftime("%Y-%m-%d_%H-%M-%S"))
+        self.face_recognizer.save('models/model_' + self.algorithm + '.xml')
+        with open('models/subjects_' + self.algorithm + '.csv', "w") as file:
+            for n in subjects:
+                file.write(n)
+                file.write(',')
 
     # rozpoznawanie osoby na zdjeciu i podpisywanie
     def predict(self, img):

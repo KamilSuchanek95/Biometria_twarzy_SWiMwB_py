@@ -19,10 +19,10 @@ face_recognizer = cv2.face.LBPHFaceRecognizer_create()
 # face_recognizer = cv2.face.EigenFaceRecognizer_create()
 # face_recognizer = cv2.face.FisherFaceRecognizer_create()
 """ ... @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ """
+ipdb.set_trace();
 
 face_recognizer.train(faces, np.array(labels))
 ts = datetime.datetime.now()
-ipdb.set_trace();
 date_str = "{}".format(ts.strftime("%Y-%m-%d_%H-%M-%S"))
 
 """ odznaczyc wlasciwe @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ """
