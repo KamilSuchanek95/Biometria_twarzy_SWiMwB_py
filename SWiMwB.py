@@ -14,10 +14,7 @@ class Face_detector:
     def __init__(self):
         self.photo = []
         self.face = []
-        self.roi = []
-
-    face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-    eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
+    face_cascade = cv2.CascadeClassifier('models/haarcascade_frontalface_default.xml')
 
     def get_photo(self):
         key = cv2.waitKey(1) # obiekt przycisku dla okna kamerki 1ms
@@ -29,7 +26,7 @@ class Face_detector:
                 key = cv2.waitKey(1) # obiekt przycisku, czekaj 1ms z oknem
                 if key == ord('s'):  # jeśli "s" to zapisz zdjęcie
                     self.photo = frame
-                    cv2.imwrite(filename="images\\image_object_" + str(id(self)) + '.jpg', img=frame)
+                    cv2.imwrite(filename="images/image_object_" + str(id(self)) + '.jpg', img=frame)
                     webcam.release()
                     cv2.waitKey(1650)
                     cv2.destroyAllWindows()
@@ -53,11 +50,13 @@ class Face_detector:
                 break
         return self.photo
 
-    def detect_face(self, path):
-        if path is None:
-            img = cv2.imread('images\\image_object_' + str(id(self)) + '.jpg')
+    def detect_face(self, image = None):
+        if image is None:
+            img = cv2.imread('images/image_object_' + str(id(self)) + '.jpg')
         else:
-            img = cv2.imread(path)
+            img = image
+        if img is None:
+            return None
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=4)
         # jesli nie wykryto twarzy zwroc None
@@ -68,25 +67,29 @@ class Face_detector:
         max_width_roi_idx, = np.where(np.max(tr) == tr)
         (x, y, w, h) = faces[max_width_roi_idx[0]]
         # zwroc ROI w skali szarości oraz koordynaty
-        self.roi = gray[y: y + w, x: x + h]
+        self.face = gray[y: y + w, x: x + h]
         return self.face
 
 
 class Face_recognitor():
 
-    def __init__(self, algorithm):
-        if(algorithm.lower == 'lbph'):
-            self.face_recognizer = cv2.face.LBPHFaceRecognizer_create()
+    def __init__(self, algorithm='lbph'):
+        if(algorithm.lower == 'eigenface'):
+            self.face_recognizer = cv2.face.EigenFaceRecognizer_create()
         elif(algorithm.lower == 'fisherface'):
             self.face_recognizer = cv2.face.FisherFaceRecognizer_create()
         else:
-            self.face_recognizer = cv2.face.EigenFaceRecognizer_create()
+            self.face_recognizer = cv2.face.LBPHFaceRecognizer_create()
         self.face_detector = Face_detector()
         self.subjects = []
 
 
-    def read_model(self, model_path):
+    def read_model(self, model_path, subjects_path):
         self.face_recognizer.read(model_path)
+        with open(subjects_path, "r") as file:
+            for f in file:
+                sub = f.split(',')
+                self.subjects = sub[0:-1]
 
 
     # przygotowanie wykrytych twarzy do uczenia modelu
@@ -136,10 +139,11 @@ class Face_recognitor():
 
 
     # rozpoznawanie osoby na zdjeciu i podpisywanie
-    def predict(self, test_img):
-        img = test_img.copy() # kopia obrazu
-        face = self.face_detector.detect_face(img) # wykrywanie twarzy
-        label, how_much = self.face_recognizer.predict(face) # rozpoznawanie
+    def predict(self, img):
+        #img = test_img.copy() # kopia obrazu
+        # face = self.face_detector.detect_face(img) # wykrywanie twarzy
+        label, how_much = self.face_recognizer.predict(img) # rozpoznawanie
         label_text = self.subjects[label] # odszukanie tozsamosci po identyfikatorze
-        return img, how_much, label_text # zwróć podpisany obraz, niepewnosc oraz tozsamosc
+        return how_much, label_text # zwroc odpisany obraz, niepewnosc oraz tozsamosc
+
 
