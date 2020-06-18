@@ -8,37 +8,41 @@ from PIL import Image, ImageTk
 
 class RecognitionApp:
 
-    def __init__(self):
+    def __init__(self, root, img):
         self.detector = s.Face_detector()
         self.recognitor = s.Face_recognitor()
         self.identities = {}
         self.toggle_camera = 1
         self.webcam = cv2.VideoCapture(0)
         self.off = 0
-        self.current_image = []
+        self.current_image = img
+        self.init_image = img
 
         # ustawienia okna
-        self.window = tki.Tk()
+        self.window = root #tki.Tk()
         self.window.wm_title("Prototyp aplikacji systemu biometrycznego")
-        self.window.config(background="#0048FF")
+        self.window.config(background="#004890")
         self.window.protocol("WM_DELETE_WINDOW", self.onClose)
 
-        self.frame = tki.Frame(self.window, width=1000, height=500)
-        self.frame.grid(row=0,column=0,columnspan=10,rowspan=10)
+        self.frame = tki.Frame(self.window, width=700, height=1000)
+        self.frame.grid(row=0,column=0,rowspan=20)
 
-        self.identity = tki.Entry(self.window, width = 10)
-        self.identity.grid(row=0, column=0, columnspan=1, rowspan=1, sticky='nsew')
+        self.identity = tki.Entry(self.window, width = 10, borderwidth=4, relief="solid")
+        self.identity.grid(row=1, column=0, rowspan=1, sticky='nsew')
 
-        self.camera_label = tki.Label(self.window)
-        self.camera_label.grid(row=1,column=0,columnspan=1,rowspan=1, sticky='nsew')
+        self.identity_label = tki.Label(self.window, text = 'Enter Your identity: ', borderwidth=4, relief="groove")
+        self.identity_label.grid(row=0, column=0, rowspan=1, sticky='nsew', pady=2, padx=2)
+
+        self.camera_label = tki.Label(self.window, image = img)
+        self.camera_label.grid(row=2,column=0, sticky='nsew')
 
         # elementy GUI
-        button_camera_on = tki.Button(self.window, text="Turn on the camera", command=self.buttonCamera)
-        button_camera_on.grid(row=1, column=7, columnspan=4, rowspan=2, sticky='nsew')
-        button_camera_off = tki.Button(self.window, text="Turn off the camera", command=self.turnOffCamera)
-        button_camera_off.grid(row=4, column=7, columnspan=4, rowspan=2, sticky='nsew')
-        button_get_image = tki.Button(self.window, text="Get the image", command=self.getImage)
-        button_get_image.grid(row=7, column=7, columnspan=4, rowspan=2, sticky='nsew')
+        button_camera_on = tki.Button(self.window, text="Turn on the camera", command=self.buttonCamera, borderwidth=4, relief='ridge')
+        button_camera_on.grid(row=3, column=0, rowspan=2, sticky='nsew')
+        button_camera_off = tki.Button(self.window, text="Turn off the camera", command=self.turnOffCamera, borderwidth=4, relief='ridge')
+        button_camera_off.grid(row=5, column=0, rowspan=2, sticky='nsew')
+        button_get_image = tki.Button(self.window, text="Get the image", command=self.getImage, borderwidth=4, relief='ridge')
+        button_get_image.grid(row=7, column=0, rowspan=2, sticky='nsew')
 
 
     def turnOnCamera(self):
@@ -69,6 +73,7 @@ class RecognitionApp:
             self.window.after_cancel(self.turnOnCamera)
             self.webcam.release()
             self.off = 1
+            self.camera_label.config(image = self.init_image)
 
 
     def getImage(self):
@@ -92,5 +97,7 @@ class RecognitionApp:
             self.window.destroy()
 
 
-appli = RecognitionApp()
+root = tki.Tk()
+img = ImageTk.PhotoImage(Image.open('init_image.jpg'))
+appli = RecognitionApp(root, img)
 appli.window.mainloop()
