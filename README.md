@@ -8,4 +8,4 @@ Przechwytywanie obrazu z kamerki internetowej zostało wykonane na podstawie teg
 
 Trwa implementacja interfejsu graficznego przy pomocy Tkinter.
 
-![](/framev1.jpg)
+![](/framev1.JPG)
