@@ -1,5 +1,6 @@
 import SWiMwB as s
 import tkinter as tki
+from tkinter import messagebox
 import cv2
 import datetime
 from PIL import Image, ImageTk
@@ -25,16 +26,19 @@ class RecognitionApp:
         self.frame = tki.Frame(self.window, width=1000, height=500)
         self.frame.grid(row=0,column=0,columnspan=10,rowspan=10)
 
+        self.identity = tki.Entry(self.window, width = 10)
+        self.identity.grid(row=0, column=0, columnspan=1, rowspan=1, sticky='nsew')
+
         self.camera_label = tki.Label(self.window)
-        self.camera_label.grid(row=2,column=1,columnspan=3,rowspan=3, sticky='nsew')
+        self.camera_label.grid(row=1,column=0,columnspan=1,rowspan=1, sticky='nsew')
 
         # elementy GUI
         button_camera_on = tki.Button(self.window, text="Turn on the camera", command=self.buttonCamera)
-        button_camera_on.grid(row=1, column=6, columnspan=2, rowspan=2, sticky='nsew')
+        button_camera_on.grid(row=1, column=7, columnspan=4, rowspan=2, sticky='nsew')
         button_camera_off = tki.Button(self.window, text="Turn off the camera", command=self.turnOffCamera)
-        button_camera_off.grid(row=4, column=6, columnspan=2, rowspan=2, sticky='nsew')
+        button_camera_off.grid(row=4, column=7, columnspan=4, rowspan=2, sticky='nsew')
         button_get_image = tki.Button(self.window, text="Get the image", command=self.getImage)
-        button_get_image.grid(row=7, column=6, columnspan=2, rowspan=2, sticky='nsew')
+        button_get_image.grid(row=7, column=7, columnspan=4, rowspan=2, sticky='nsew')
 
 
     def turnOnCamera(self):
@@ -44,7 +48,7 @@ class RecognitionApp:
         else:
             check, self.current_image = self.webcam.read()
             if check:
-                image = Image.fromarray(self.current_image)
+                image = Image.fromarray(cv2.cvtColor(self.current_image, cv2.COLOR_BGR2RGB))
                 image = ImageTk.PhotoImage(image)
                 self.camera_label.image = image
                 self.camera_label.config(image=image)
@@ -74,9 +78,11 @@ class RecognitionApp:
         # check1, image1 = self.webcam.read()
         ts = datetime.datetime.now()  # grab the current timestamp
         filename = "{}.jpg".format(ts.strftime("%Y-%m-%d_%H-%M-%S"))
+        filename = "images/" + self.identity.get() + '_' + filename
         cv2.imwrite(filename=filename, img=self.current_image) # "images/image_object_" + str(id(check1)) + '.jpg'
         # check, that streaming is off
         # self.off = 1
+        messagebox.showinfo('Message title', 'The image was saved in ' + filename)
 
 
     def onClose(self):
