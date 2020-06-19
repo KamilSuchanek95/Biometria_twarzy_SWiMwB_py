@@ -62,19 +62,32 @@ class RecognitionApp:
         """ Kontrolki w panelu "Face recognition configuration panel" """
         self.frame_training = tki.Frame(self.rec_configuration_tab, background="#F50055")
         self.frame_training.grid(row=0, column=0,columnspan=3, sticky='nsew')
+        # training path settings
         self.training_images_label = tki.Label(self.frame_training, text="Training images path: ")
         self.training_images_label.grid(row=0, column=0, columnspan=2, sticky='nsew')
-        self.training_path_entry = tki.Entry(self.frame_training, text='.../training_images', borderwidth=4, relief='ridge')
+        self.training_path_entry = tki.Entry(self.frame_training, borderwidth=4, relief='ridge'); self.training_path_entry.insert(tki.END, "for example: .../training_images")
         self.training_path_entry.grid(row=1, column=0, columnspan=3, sticky='nsew')
-        self.training_path_select_button = tki.Button(self.frame_training, command=partial(self.getPath, self.training_path_entry), text='Select path or entry below:')
+        self.training_path_select_button = tki.Button(self.frame_training, command=partial(self.getPath, self.training_path_entry), text='Select path or entry below:', relief='solid')
         self.training_path_select_button.grid(row=0, column=2,sticky='nsew')
-        self.training_path_entry = tki.Entry(self.frame_training, text='.../training_images', borderwidth=4, relief='ridge')
-        self.training_path_entry.grid(row=1, column=0, columnspan=3, sticky='nsew')
+        # testing path settings
+        self.testing_images_label = tki.Label(self.frame_training, text="Testing images path: ")
+        self.testing_images_label.grid(row=2, column=0, columnspan=2, sticky='nsew')
+        self.testing_path_entry = tki.Entry(self.frame_training, text = '', borderwidth=4, relief='ridge'); self.testing_path_entry.insert(tki.END, "for example: .../testing_images")
+        self.testing_path_entry.grid(row=3, column=0, columnspan=3, sticky='nsew')
+        self.testing_path_select_button = tki.Button(self.frame_training, command=partial(self.getPath, self.testing_path_entry), text='Select path or entry below:', relief='solid')
+        self.testing_path_select_button.grid(row=2, column=2,sticky='nsew')
+        # classes of resulting model
+        self.resulting_classes_label = tki.Message(self.frame_training, text="Replace the class names \"s0, s1, ...\" with real identity names by selecting the folder name, e.g. \"s0\" and entering \"Adam Kowalski\" instead, without removing a commas, each identity name must be exactly on the position of the folder name being replaced. \n\nSo, having a list: \"s0, s1, s10\", assuming that s0 is assigned to the identity \"Adam Kowalski\", s1 to \"Marta Brzdż\" and s10 to \"Lucyna Puf\", then the text \"s0, s1, s10\" must be replaced by \"Adam Kowalski, Marta Brzdż, Lucyna Puf \" :")
+        self.resulting_classes_label.grid(row=4, column=0, columnspan=2, sticky='nsew')
+        self.resulting_class_entry = tki.Entry(self.frame_training, borderwidth=4, relief='ridge'); self.resulting_class_entry.insert(tki.END, "for example: s0,s1,s10,s11,s12,s2,s3")
+        self.resulting_class_entry.grid(row=5, column=0, columnspan=3, sticky='nsew')
+        self.confirmation_classes_button = tki.Button(self.frame_training, text='Confirm the changed list', relief='solid')
+        self.confirmation_classes_button.grid(row=4, column=2,sticky='nsew')
 
-        self.button_loadModel = tki.Button(self.frame_training, text='Load model', command=self.load_model, borderwidth=4, relief='ridge')
-        self.button_loadModel.grid(row=4, column=3, rowspan=2, sticky='nsew')
-        self.button_empty = tki.Button(self.frame_training, text='Empty', command=self.empty, borderwidth=4, relief='ridge')
-        self.button_empty.grid(row=6, column=3, rowspan=2, sticky='nsew')
+        # self.button_loadModel = tki.Button(self.frame_training, text='Load model', command=self.load_model, borderwidth=4, relief='ridge')
+        # self.button_loadModel.grid(row=4, column=3, rowspan=2, sticky='nsew')
+        # self.button_empty = tki.Button(self.frame_training, text='Empty', command=self.empty, borderwidth=4, relief='ridge')
+        # self.button_empty.grid(row=6, column=3, rowspan=2, sticky='nsew')
 
 
         """ Kontrolki w panelu "Temperature verification configuration panel" """
