@@ -1,6 +1,7 @@
 import SWiMwB as s
 import tkinter as tki
-from tkinter import messagebox, ttk
+from tkinter import messagebox, ttk, filedialog
+from functools import partial
 import cv2
 import datetime
 from PIL import Image, ImageTk
@@ -19,58 +20,67 @@ class RecognitionApp:
         self.current_image = img
         self.init_image = img
 
-        # settings of figure
-        self.window = root #tki.Tk()
+        # ustawienia okna aplikacji
+        self.window = root
         self.window.wm_title("Prototyp aplikacji systemu biometrycznego")
         self.window.config(background="#004890")
         self.window.protocol("WM_DELETE_WINDOW", self.onClose)
-
+        # ustawienia paneli aplikacji
         self.tab_control = ttk.Notebook(self.window)
         self.recognition_tab = ttk.Frame(self.tab_control)
-        self.configuration_tab = ttk.Frame(self.tab_control)
+        self.rec_configuration_tab = ttk.Frame(self.tab_control)
+        self.temp_configuration_tab = ttk.Frame(self.tab_control)
+        self.ecg_configuration_tab = ttk.Frame(self.tab_control)
         self.tab_control.add(self.recognition_tab, text='Recognition panel')
-        self.tab_control.add(self.configuration_tab, text='Configuration panel')
+        self.tab_control.add(self.rec_configuration_tab, text='Face recognition configuration panel')
+        self.tab_control.add(self.temp_configuration_tab, text='Temperature verification configudration panel')
+        self.tab_control.add(self.ecg_configuration_tab, text='ECG recognition configuration panel')
         self.tab_control.grid(column=0,row=0)
 
-        self.frame = tki.Frame(self.recognition_tab, width=700, height=1000,background="#004890")
-        self.frame.grid(row=0,column=0,rowspan=20)
-
-        self.identity = tki.Entry(self.recognition_tab, width = 10, borderwidth=4, relief="solid")
-        self.identity.grid(row=1, column=0, rowspan=1, sticky='nsew')
-
-        self.identity_label = tki.Label(self.recognition_tab, text = 'Enter Your identity: ', borderwidth=4, relief="groove")
-        self.identity_label.grid(row=0, column=0, rowspan=1, sticky='nsew', pady=2, padx=2)
-
+        """ Kontrolki w panelu "Recognition panel" """
+        # podgląd kamerki
         self.camera_label = tki.Label(self.recognition_tab, image = img)
-        self.camera_label.grid(row=2,column=0, sticky='nsew')
-
-        self.button_camera_on = tki.Button(self.recognition_tab, text="Turn on the camera", command=self.buttonCamera, borderwidth=4, relief='ridge')
-        self.button_camera_on.grid(row=3, column=0, rowspan=2, sticky='nsew')
-        self.button_camera_off = tki.Button(self.recognition_tab, text="Turn off the camera", command=self.turnOffCamera, borderwidth=4, relief='ridge')
-        self.button_camera_off.grid(row=5, column=0, rowspan=2, sticky='nsew')
-        self.button_get_image = tki.Button(self.recognition_tab, text="Get the image", command=self.getImage, borderwidth=4, relief='ridge')
-        self.button_get_image.grid(row=7, column=0, rowspan=2, sticky='nsew')
-
+        self.camera_label.grid(row=0,column=0, sticky='nsew')
+        # rozdzielacz podglądu od przycisków
         self.sep = ttk.Separator(self.recognition_tab, orient="vertical")
         self.sep.grid(column=1, sticky='ns', columnspan=2)
+        # ramka przycisków, aby grupowala je w pionie, nadal w jednym wierszu, który również zawiera podgląd
+        self.frame_controls = tki.Frame(self.recognition_tab, background="#F55255")
+        self.frame_controls.grid(row=0, column=3,columnspan=1, sticky='nsew')
+        # kontrolki w panelu bocznym (ramce)
+        self.identity_label = tki.Label(self.frame_controls, text = 'Enter Your identity: ', borderwidth=4, relief="groove")
+        self.identity_label.grid(sticky='nsew')
+        self.identity = tki.Entry(self.frame_controls, width=10, borderwidth=4, relief="solid")
+        self.identity.grid(sticky='nsew')
+        self.button_camera_on = tki.Button(self.frame_controls, text="Turn on the camera", command=self.buttonCamera, borderwidth=4, relief='ridge')
+        self.button_camera_on.grid(sticky='nsew')
+        self.button_camera_off = tki.Button(self.frame_controls, text="Turn off the camera", command=self.turnOffCamera, borderwidth=4, relief='ridge')
+        self.button_camera_off.grid(sticky='nsew')
+        self.button_get_image = tki.Button(self.frame_controls, text="Get the image", command=self.getImage, borderwidth=4, relief='ridge')
+        self.button_get_image.grid(sticky='nsew')
 
-        self.button_temperature = tki.Button(self.recognition_tab, text="Temp", command=self.temperature, borderwidth=4,
-                                     relief='solid', background="#F55255")
-        self.button_temperature.grid(row=0, column=3, rowspan=1, sticky='nsew')
-        self.button_ecg = tki.Button(self.recognition_tab, text="ECG", command=self.ecg, borderwidth=4,
-                                     relief='solid', background="#904899")
-        self.button_ecg.grid(row=1, column=3, rowspan=1, sticky='nsew')
+        """ Kontrolki w panelu "Face recognition configuration panel" """
+        self.frame_training = tki.Frame(self.rec_configuration_tab, background="#F50055")
+        self.frame_training.grid(row=0, column=0,columnspan=3, sticky='nsew')
+        self.training_images_label = tki.Label(self.frame_training, text="Training images path: ")
+        self.training_images_label.grid(row=0, column=0, columnspan=2, sticky='nsew')
+        self.training_path_entry = tki.Entry(self.frame_training, text='.../training_images', borderwidth=4, relief='ridge')
+        self.training_path_entry.grid(row=1, column=0, columnspan=3, sticky='nsew')
+        self.training_path_select_button = tki.Button(self.frame_training, command=partial(self.getPath, self.training_path_entry), text='Select path or entry below:')
+        self.training_path_select_button.grid(row=0, column=2,sticky='nsew')
+        self.training_path_entry = tki.Entry(self.frame_training, text='.../training_images', borderwidth=4, relief='ridge')
+        self.training_path_entry.grid(row=1, column=0, columnspan=3, sticky='nsew')
 
-        # configuration TopLevel app
-        # self.top = tki.Toplevel(self.window)
-        # self.top.wm_title("Configuracja rozpoznawania twarzy")
-        # self.top.config(background="#004893")
-        self.top_button_trainModel = tki.Button(self.configuration_tab, text='Train model', command=self.train_model, borderwidth=4, relief='ridge')
-        self.top_button_trainModel.grid(row=2, column=3, rowspan=2, sticky='nsew')
-        self.top_button_loadModel = tki.Button(self.configuration_tab, text='Load model', command=self.load_model, borderwidth=4, relief='ridge')
-        self.top_button_loadModel.grid(row=4, column=3, rowspan=2, sticky='nsew')
-        self.top_button_empty = tki.Button(self.configuration_tab, text='Empty', command=self.empty, borderwidth=4, relief='ridge')
-        self.top_button_empty.grid(row=6, column=3, rowspan=2, sticky='nsew')
+        self.button_loadModel = tki.Button(self.frame_training, text='Load model', command=self.load_model, borderwidth=4, relief='ridge')
+        self.button_loadModel.grid(row=4, column=3, rowspan=2, sticky='nsew')
+        self.button_empty = tki.Button(self.frame_training, text='Empty', command=self.empty, borderwidth=4, relief='ridge')
+        self.button_empty.grid(row=6, column=3, rowspan=2, sticky='nsew')
+
+
+        """ Kontrolki w panelu "Temperature verification configuration panel" """
+
+        """ Kontrolki w panelu "ECG recognition configuration panel" """
+
 
 
     def turnOnCamera(self):
@@ -139,6 +149,11 @@ class RecognitionApp:
 
     def empty(self):
         3
+
+    def getPath(self, entry_handle):
+        path = filedialog.askdirectory()
+        entry_handle.delete(0, tki.END)
+        entry_handle.insert(0, path)
 
 
 root = tki.Tk()
