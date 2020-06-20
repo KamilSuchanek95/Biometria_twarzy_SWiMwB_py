@@ -8,4 +8,7 @@ Przechwytywanie obrazu z kamerki internetowej zostało wykonane na podstawie teg
 
 Trwa implementacja interfejsu graficznego przy pomocy Tkinter.
 
-![](/framev1.JPG)
+# okno główne:
+![](/framev2.JPG)
+# okno ustawień dla modelu rozpoznawania twarzy:
+![](/framev2_fac.JPG)
