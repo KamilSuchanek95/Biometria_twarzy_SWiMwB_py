@@ -5,6 +5,8 @@ from functools import partial
 import cv2
 import datetime
 from PIL import Image, ImageTk
+import os
+import numpy as np
 
 
 class RecognitionApp:
@@ -12,7 +14,7 @@ class RecognitionApp:
     def __init__(self, root, img):
         # globals
         self.detector = s.Face_detector()
-        self.recognitor = s.Face_recognitor()
+        self.recognizer = s.Face_recognitor()
         self.subjects= []
         self.identities = {}
         self.toggle_camera = 1
@@ -78,14 +80,12 @@ class RecognitionApp:
         self.testing_path_select_button = tki.Button(self.frame_training, command=partial(self.getPath, self.testing_path_entry), text='Select path\nor entry below:', relief='solid')
         self.testing_path_select_button.grid(row=2, column=2,sticky='nsew')
         # select algorithm
-        self.alg_var = tki.IntVar(self.frame_training, 0)
-        # self.alg_frame = tki.Frame(self.frame_training)
-        # self.alg_frame.grid(row=4, column=0, sticky='nsew')
-        self.alg_lbph_radio = tki.Radiobutton(self.frame_training, text="LBPH", command=self.radioChecked, variable = self.alg_var, val = 0)
+        self.alg_var = tki.StringVar(self.frame_training, 'lbph')
+        self.alg_lbph_radio = tki.Radiobutton(self.frame_training, text="LBPH", command=self.radioChecked, variable = self.alg_var, val = 'lbph')
         self.alg_lbph_radio.grid(row=4, column=0, sticky='nsew')
-        self.alg_fish_radio = tki.Radiobutton(self.frame_training, text="Fisherface", command=self.radioChecked, variable = self.alg_var, val = 1)
+        self.alg_fish_radio = tki.Radiobutton(self.frame_training, text="Fisherface", command=self.radioChecked, variable = self.alg_var, val = 'fisherface')
         self.alg_fish_radio.grid(row=4, column=1, sticky='nsew')
-        self.alg_eigen_radio = tki.Radiobutton(self.frame_training, text="Eigenface", command=self.radioChecked, variable = self.alg_var, val = 2)
+        self.alg_eigen_radio = tki.Radiobutton(self.frame_training, text="Eigenface", command=self.radioChecked, variable = self.alg_var, val = 'eigenface')
         self.alg_eigen_radio.grid(row=4, column=2, sticky='nsew')
         # train model
         self.create_model_button = tki.Button(self.frame_training, command=self.createModel, text='If You selected necessary paths\nClick and train model', relief='solid')
@@ -98,15 +98,14 @@ class RecognitionApp:
         self.confirmation_classes_button = tki.Button(self.frame_training, text='Confirm the\nchanged list', relief='solid', command=self.createIdentityClasses)
         self.confirmation_classes_button.grid(row=6, column=2,sticky='nsew')
 
-        # self.button_loadModel = tki.Button(self.frame_training, text='Load model', command=self.load_model, borderwidth=4, relief='ridge')
-        # self.button_loadModel.grid(row=4, column=3, rowspan=2, sticky='nsew')
-        # self.button_empty = tki.Button(self.frame_training, text='Empty', command=self.empty, borderwidth=4, relief='ridge')
-        # self.button_empty.grid(row=6, column=3, rowspan=2, sticky='nsew')
-
 
         """ Kontrolki w panelu "Temperature verification configuration panel" """
 
+        # ... #
+
         """ Kontrolki w panelu "ECG recognition configuration panel" """
+
+        # ... #
 
 
 
@@ -162,20 +161,7 @@ class RecognitionApp:
         self.window.destroy()
 
 
-    def temperature(self):
-        1
-    def ecg(self):
-        1
-
-    # configuration TopLevel metods
-    def train_model(self):
-        1
-
-    def load_model(self):
-        2
-
-    def empty(self):
-        3
+    # Face recognition configuration metods
 
     def getPath(self, entry_handle):
         path = filedialog.askdirectory()
@@ -192,12 +178,47 @@ class RecognitionApp:
         except:
             self.resulting_class_entry.insert(0, 'You must first train or load a model!')
 
+    def testModel(self, path): # create name_parameters.csv file with {subject,mean p, identity} columns
+        p = []
+        for subject in os.listdir(path):
+            #	if subject.startswith("."):
+            #		continue;
+            oo = os.listdir(path + '/' + subject)
+            for t in oo:
+                test_img = cv2.imread(path + '/' + subject + "/" + t)
+                if self.recognizer.algorithm == 'lbph':
+                    predicted_img, how_much, who = self.recognizer.predict(test_img, eq=0)
+                else:
+                    predicted_img, how_much, who = self.recognizer.predict(test_img, eq=1)
+                if predicted_img is None:
+                    continue
+                if who == subject:
+                    p.append(how_much)
+            with open("models/" + self.recognizer.algorithm + "_parameters.csv", "a") as file:
+                if len(p) > 0:
+                    file.write(subject + ',' + str(np.mean(p)) + '\n')
+                else:
+                    file.write(subject + ',' + 0 + '\n')
+            p = []
+        print('koniec testow')
 
     def createModel(self):
-        print(0)
+        # create model object
+        self.recognizer = s.Face_recognitor(self.alg_var.get())
+        # train it
+        self.recognizer.train_model(self.training_path_entry.get())
+        # set subjects
+        self.subjects = self.recognizer.subjects
+        # entry classes
+        self.resulting_class_entry.delete(0, tki.END)
+        self.resulting_class_entry.insert(0, ','.join(self.subjects))
+        # test model
+        self.testModel(self.testing_path_entry.get())
 
 
-    def radioChecked(self):
+
+
+    def radioChecked(self): # unnecessary
         print(self.alg_var.get())
 
 

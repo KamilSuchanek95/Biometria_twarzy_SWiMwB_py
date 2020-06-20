@@ -138,27 +138,34 @@ class Face_recognitor():
         return faces, labels, self.subjects
 
 
-    def train_model(self):
+    def train_model(self, path = "training_images"):
         if self.algorithm == 'lbph':
-            faces, labels, subjects = self.prepare_training_data("training_images", eq=0)
+            faces, labels, subjects = self.prepare_training_data(path, eq=0)
         else:
-            faces, labels, subjects = self.prepare_training_data("training_images", eq=1)
+            faces, labels, subjects = self.prepare_training_data(path, eq=1)
         self.face_recognizer.train(faces, np.array(labels))
         # ts = datetime.datetime.now()
         # ipdb.set_trace();
         # date_str = "{}".format(ts.strftime("%Y-%m-%d_%H-%M-%S"))
-        self.face_recognizer.save('models/model_' + self.algorithm + '.xml')
-        with open('models/subjects_' + self.algorithm + '.csv', "w") as file:
+        self.face_recognizer.save('models/' + self.algorithm + '_model' + '.xml')
+        with open('models/' + self.algorithm + '_subjects.csv', "w") as file:
             for n in subjects:
                 file.write(n)
                 file.write(',')
 
     # rozpoznawanie osoby na zdjeciu i podpisywanie
-    def predict(self, img):
+    def predict(self, img, eq):
         #img = test_img.copy() # kopia obrazu
         # face = self.face_detector.detect_face(img) # wykrywanie twarzy
-        label, how_much = self.face_recognizer.predict(img) # rozpoznawanie
-        label_text = self.subjects[label] # odszukanie tozsamosci po identyfikatorze
-        return how_much, label_text # zwroc odpisany obraz, niepewnosc oraz tozsamosc
-
-
+        #label, how_much = self.face_recognizer.predict(img) # rozpoznawanie
+        #label_text = self.subjects[label] # odszukanie tozsamosci po identyfikatorze
+        #return how_much, label_text # zwroc odpisany obraz, niepewnosc oraz tozsamosc
+        img = img.copy()  # kopia obrazu
+        face = self.face_detector.detect_face(img)  # wykrywanie twarzy
+        if face is None:
+            return None, None, None
+        if eq:
+            face = cv2.resize(face, (256, 256))
+        label, how_much = self.face_recognizer.predict(face)  # rozpoznawanie
+        label_text = self.subjects[label]  # odszukanie tozsamosci po identyfikatorze
+        return img, how_much, label_text  # zwróć podpisany obraz, niepewnosc oraz tozsamosc
