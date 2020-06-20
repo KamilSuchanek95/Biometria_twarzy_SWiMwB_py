@@ -7,6 +7,7 @@ import datetime
 from PIL import Image, ImageTk
 import os
 import numpy as np
+import ipdb
 
 
 class RecognitionApp:
@@ -17,6 +18,7 @@ class RecognitionApp:
         self.recognizer = s.Face_recognitor()
         self.subjects= []
         self.identities = {}
+        self.p_vals = {}
         self.toggle_camera = 1
         self.webcam = cv2.VideoCapture(0)
         self.off = 0
@@ -41,16 +43,16 @@ class RecognitionApp:
         self.tab_control.grid(column=0,row=0)
 
         """ Kontrolki w panelu "Recognition panel" """
-        # podgląd kamerki
+        """# podgląd kamerki"""
         self.camera_label = tki.Label(self.recognition_tab, image = img)
         self.camera_label.grid(row=0,column=0, sticky='nsew')
-        # rozdzielacz podglądu od przycisków
+        """# rozdzielacz podglądu od przycisków"""
         self.sep = ttk.Separator(self.recognition_tab, orient="vertical")
         self.sep.grid(column=1, sticky='ns', columnspan=2)
-        # ramka przycisków, aby grupowala je w pionie, nadal w jednym wierszu, który również zawiera podgląd
+        """# ramka przycisków, aby grupowala je w pionie, nadal w jednym wierszu, który również zawiera podgląd"""
         self.frame_controls = tki.Frame(self.recognition_tab, background="#F55255")
         self.frame_controls.grid(row=0, column=3,columnspan=1, sticky='nsew')
-        # kontrolki w panelu bocznym (ramce)
+        """# kontrolki w panelu bocznym (ramce)"""
         self.identity_label = tki.Label(self.frame_controls, text = 'Enter Your identity: ', borderwidth=4, relief="groove")
         self.identity_label.grid(sticky='nsew')
         self.identity_entry = tki.Entry(self.frame_controls, width=10, borderwidth=4, relief="solid")
@@ -72,14 +74,14 @@ class RecognitionApp:
         self.training_path_entry.grid(row=1, column=0, columnspan=3, sticky='nsew')
         self.training_path_select_button = tki.Button(self.frame_training, command=partial(self.getPath, self.training_path_entry), text='Select path\nor entry below:', relief='solid')
         self.training_path_select_button.grid(row=0, column=2,sticky='nsew')
-        # testing path settings
+        """# testing path settings"""
         self.testing_images_label = tki.Label(self.frame_training, text="Testing images path: ")
         self.testing_images_label.grid(row=2, column=0, columnspan=2, sticky='nsew')
         self.testing_path_entry = tki.Entry(self.frame_training, text = '', borderwidth=4, relief='ridge'); self.testing_path_entry.insert(tki.END, "for example: .../testing_images")
         self.testing_path_entry.grid(row=3, column=0, columnspan=3, sticky='nsew')
         self.testing_path_select_button = tki.Button(self.frame_training, command=partial(self.getPath, self.testing_path_entry), text='Select path\nor entry below:', relief='solid')
         self.testing_path_select_button.grid(row=2, column=2,sticky='nsew')
-        # select algorithm
+        """# select algorithm"""
         self.alg_var = tki.StringVar(self.frame_training, 'lbph')
         self.alg_lbph_radio = tki.Radiobutton(self.frame_training, text="LBPH", command=self.radioChecked, variable = self.alg_var, val = 'lbph')
         self.alg_lbph_radio.grid(row=4, column=0, sticky='nsew')
@@ -87,10 +89,12 @@ class RecognitionApp:
         self.alg_fish_radio.grid(row=4, column=1, sticky='nsew')
         self.alg_eigen_radio = tki.Radiobutton(self.frame_training, text="Eigenface", command=self.radioChecked, variable = self.alg_var, val = 'eigenface')
         self.alg_eigen_radio.grid(row=4, column=2, sticky='nsew')
-        # train model
+        """# train model or load model """
         self.create_model_button = tki.Button(self.frame_training, command=self.createModel, text='If You selected necessary paths\nClick and train model', relief='solid')
-        self.create_model_button.grid(row=5, column=0, columnspan=3, sticky='nsew')
-        # classes of resulting model
+        self.create_model_button.grid(row=5, column=0, columnspan=2, sticky='nsew')
+        self.create_model_button = tki.Button(self.frame_training, command=self.loadModel, text='Or load model\nfrom file', relief='solid')
+        self.create_model_button.grid(row=5, column=2, columnspan=1, sticky='nsew')
+        """# classes of resulting model"""
         self.resulting_classes_label = tki.Message(self.frame_training, text="Replace the class names \"s0, s1, ...\" with real identity names by selecting the folder name, e.g. \"s0\" and entering \"Adam Kowalski\" instead, without removing a commas, each identity name must be exactly on the position of the folder name being replaced. \n\nSo, having a list: \"s0, s1, s10\", assuming that s0 is assigned to the identity \"Adam Kowalski\", s1 to \"Marta Brzdż\" and s10 to \"Lucyna Puf\", then the text \"s0, s1, s10\" must be replaced by \"Adam Kowalski, Marta Brzdż, Lucyna Puf \" :")
         self.resulting_classes_label.grid(row=6, column=0, columnspan=2, sticky='nsew')
         self.resulting_class_entry = tki.Entry(self.frame_training, borderwidth=4, relief='ridge'); self.resulting_class_entry.insert(tki.END, "for example: s0,s1,s10,s11,s12,s2,s3")
@@ -170,13 +174,25 @@ class RecognitionApp:
 
 
     def createIdentityClasses(self):
-        try:
+        if(1):
             identityList = self.resulting_class_entry.get().split(',')
             self.identities = dict(zip(self.subjects, identityList))
-            if len(self.identities) < 2:
-                self.resulting_class_entry.insert(0, 'You must first train or load a model!')
-        except:
-            self.resulting_class_entry.insert(0, 'You must first train or load a model!')
+            fr = open('models/' + str(self.recognizer.algorithm) + '_parameters.csv', 'r')
+            lines = fr.readlines()
+            if len(lines)==len(self.subjects):
+                for idx, el in enumerate(lines):
+                    lines[idx] = lines[idx][0:-1] + ',' + self.identities[self.subjects[idx]]
+                fw = open('models/' + self.recognizer.algorithm + '_parameters.csv', 'w')
+                for el in lines:
+                    fw.write(el + '\n')
+                fw.close()
+            else:
+                self.resulting_class_entry.insert(0, "Size of lists isn\'t equal!")
+            if len(self.identities) < 1:
+                self.resulting_class_entry.insert(0, 'You must first train or load a model1!')
+        #except:
+        #    self.resulting_class_entry.insert(0, 'You must first train or load a model!')
+
 
     def testModel(self, path): # create name_parameters.csv file with {subject,mean p, identity} columns
         p = []
@@ -202,6 +218,34 @@ class RecognitionApp:
             p = []
         print('koniec testow')
 
+
+    def loadModel(self):
+        try:
+            self.recognizer = s.Face_recognitor(str(self.alg_var.get()))
+            model_path = filedialog.askopenfile(title = "Select " + str(self.alg_var.get()) + " model XML file", filetypes=(("Text Files", "*.xml"),))
+            subjects_path = filedialog.askopenfile(title = "Select subjects csv file", filetypes = [("Text files","*.csv")])
+            parameters_path = filedialog.askopenfile(title = "Select parameters csv file", filetypes = [("Text files","*.csv")])
+
+            self.recognizer.read_model(model_path = model_path.name, subjects_path = subjects_path.name)
+
+            with open(subjects_path.name, "r") as file:
+                for f in file:
+                    self.subjects = f.split(',')
+                    self.subjects = self.subjects[0:-1]
+            self.resulting_class_entry.delete(0,tki.END)
+            self.resulting_class_entry.insert(0,','.join(self.subjects))
+
+            fr = open(parameters_path.name, 'r')
+            lines = fr.readlines()
+            for idx, l in enumerate(lines):
+                list = lines[idx].split(',')
+                self.p_vals.update({list[0]: float(list[1])})
+
+            messagebox.showinfo('Load successful', 'Model was loaded!')
+        except:
+            messagebox.showinfo('Load unsuccessful', 'Wrong selected files')
+
+
     def createModel(self):
         # create model object
         self.recognizer = s.Face_recognitor(self.alg_var.get())
@@ -214,8 +258,6 @@ class RecognitionApp:
         self.resulting_class_entry.insert(0, ','.join(self.subjects))
         # test model
         self.testModel(self.testing_path_entry.get())
-
-
 
 
     def radioChecked(self): # unnecessary
