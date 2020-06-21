@@ -7,7 +7,27 @@ import datetime
 from PIL import Image, ImageTk
 import os
 import numpy as np
+import _pickle as pkl
 import ipdb
+
+class PackageSystem:
+
+    def __init__(self, detector, recognizer, subjects, identities, p_vals):
+        self.detector = detector
+        self.recognizer = recognizer
+        self.subjects = subjects
+        self.identities = identities
+        self.p_vals = p_vals
+
+
+    def saveSystemObject(self):
+        ts = datetime.datetime.now()
+        date_str = "{}".format(ts.strftime("%Y-%m-%d_%H-%M-%S"))
+        pkl.dump(self, 'Recognition Systems/system_' + self.recognizer.algorithm + '_' + date_str + '.pkl')
+
+
+    def loadSystemObject(self, path):
+        self = pkl.load(path)
 
 
 class RecognitionApp:
@@ -182,16 +202,14 @@ class RecognitionApp:
             if len(lines)==len(self.subjects):
                 for idx, el in enumerate(lines):
                     lines[idx] = lines[idx][0:-1] + ',' + self.identities[self.subjects[idx]]
-                fw = open('models/' + self.recognizer.algorithm + '_parameters.csv', 'w')
-                for el in lines:
-                    fw.write(el + '\n')
-                fw.close()
-            else:
-                self.resulting_class_entry.insert(0, "Size of lists isn\'t equal!")
-            if len(self.identities) < 1:
-                self.resulting_class_entry.insert(0, 'You must first train or load a model1!')
-        #except:
-        #    self.resulting_class_entry.insert(0, 'You must first train or load a model!')
+            fw = open('models/' + self.recognizer.algorithm + '_parameters.csv', 'w')
+            for el in lines:
+                fw.write(el + '\n')
+            fw.close()
+        else:
+            self.resulting_class_entry.insert(0, "Size of lists isn\'t equal!")
+        if len(self.identities) < 1:
+           self.resulting_class_entry.insert(0, 'You must first train or load a model1!')
 
 
     def testModel(self, path): # create name_parameters.csv file with {subject,mean p, identity} columns
