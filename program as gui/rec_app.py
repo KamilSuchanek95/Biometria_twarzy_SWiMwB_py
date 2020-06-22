@@ -7,27 +7,7 @@ import datetime
 from PIL import Image, ImageTk
 import os
 import numpy as np
-import _pickle as pkl
-import ipdb
-
-class PackageSystem:
-
-    def __init__(self, detector, recognizer, subjects, identities, p_vals):
-        self.detector = detector
-        self.recognizer = recognizer
-        self.subjects = subjects
-        self.identities = identities
-        self.p_vals = p_vals
-
-
-    def saveSystemObject(self):
-        ts = datetime.datetime.now()
-        date_str = "{}".format(ts.strftime("%Y-%m-%d_%H-%M-%S"))
-        pkl.dump(self, 'Recognition Systems/system_' + self.recognizer.algorithm + '_' + date_str + '.pkl')
-
-
-    def loadSystemObject(self, path):
-        self = pkl.load(path)
+import ipdb as i
 
 
 class RecognitionApp:
@@ -83,6 +63,8 @@ class RecognitionApp:
         self.button_camera_off.grid(sticky='nsew')
         self.button_get_image = tki.Button(self.frame_controls, text="Get the image", command=self.getImage, borderwidth=4, relief='ridge')
         self.button_get_image.grid(sticky='nsew')
+        self.button_recognize = tki.Button(self.frame_controls, text="Recognize the face", command=self.recognizeFace, borderwidth=4, relief='ridge')
+        self.button_recognize.grid(sticky='nsew')
 
         """ Kontrolki w panelu "Face recognition configuration panel" """
         self.frame_training = tki.Frame(self.rec_configuration_tab, background="#F50055")
@@ -121,6 +103,9 @@ class RecognitionApp:
         self.resulting_class_entry.grid(row=7, column=0, columnspan=3, sticky='nsew')
         self.confirmation_classes_button = tki.Button(self.frame_training, text='Confirm the\nchanged list', relief='solid', command=self.createIdentityClasses)
         self.confirmation_classes_button.grid(row=6, column=2,sticky='nsew')
+        """# save configurations"""
+        self.save_configuration_button = tki.Button(self.frame_training, text='Save configuration', relief='solid', command=self.confirmModel)
+        self.save_configuration_button.grid(row=8, column=0, columnspan=3, sticky='nsew')
 
 
         """ Kontrolki w panelu "Temperature verification configuration panel" """
@@ -131,6 +116,14 @@ class RecognitionApp:
 
         # ... #
 
+        # initial code:
+        isSet = open('Recognition Systems/set.txt', 'r')
+        line_of_set = isSet.readline().split(',')
+        if float(line_of_set[0]) < 1:
+            messagebox.showinfo('Init program','You must configure the program!\nGo to the face recognition configuration panel and train / load the model')
+        else:
+            self.alg_var.set(line_of_set[1])
+            self.loadModel(init=1)
 
 
     def turnOnCamera(self):
@@ -184,8 +177,30 @@ class RecognitionApp:
         self.window.quit()
         self.window.destroy()
 
+    def recognizeFace(self):
+        if self.alg_var.get() != 'lbph':
+            eg = 1
+        else:
+            eq = 0
+        img, p_val, subject = self.recognizer.predict(self.current_image, eq = eq)
+        if img is None:
+            messagebox.showinfo('Recognition imformation', 'No face detected!')
+        else:
+            if self.identity_entry.get() == self.identities[subject]: # jeśli wykryto Cie tak jak sie podpisałeś...
+                if self.p_vals[subject] >= p_val: # z wymaganą dokładnością...
+                    messagebox.showinfo('Recognition result','You are really ' + self.identities[subject] + '.\nAcces allowed.')
+            elif self.p_vals[subject] >= p_val:
+                messagebox.showinfo('Recognition result', 'You are not ' + self.identity_entry.get() + ",\n  You have been recognized as " + self.identities[subject] + ".\n Access denied.")
+            else:
+                messagebox.showinfo('Recognition result','Not recognized approved person\n')
+                print('p_val:\t\t'      + str(p_val) + '\n' +
+                      'self.p+val:\t\t' + str(self.p_vals[subject]) + '\n' +
+                      'entry.ID:\t\t' + self.identity_entry.get() + '\n' +
+                      'subject:\t\t' + subject + '\n' +
+                      'self.ID:\t\t' + self.identities[subject])
 
-    # Face recognition configuration metods
+
+    """# Face recognition configuration metods"""
 
     def getPath(self, entry_handle):
         path = filedialog.askdirectory()
@@ -194,26 +209,31 @@ class RecognitionApp:
 
 
     def createIdentityClasses(self):
-        if(1):
+        fr = open('models/' + str(self.recognizer.algorithm) + '_parameters.csv', 'r')
+        if len(fr.readline().split(',')) < 3:
             identityList = self.resulting_class_entry.get().split(',')
-            self.identities = dict(zip(self.subjects, identityList))
-            fr = open('models/' + str(self.recognizer.algorithm) + '_parameters.csv', 'r')
-            lines = fr.readlines()
-            if len(lines)==len(self.subjects):
-                for idx, el in enumerate(lines):
-                    lines[idx] = lines[idx][0:-1] + ',' + self.identities[self.subjects[idx]]
-            fw = open('models/' + self.recognizer.algorithm + '_parameters.csv', 'w')
-            for el in lines:
-                fw.write(el + '\n')
-            fw.close()
-        else:
-            self.resulting_class_entry.insert(0, "Size of lists isn\'t equal!")
-        if len(self.identities) < 1:
-           self.resulting_class_entry.insert(0, 'You must first train or load a model1!')
+            if(len(identityList)) == len(self.subjects):
+                self.identities = dict(zip(self.subjects, identityList))
+                if len(self.identities) < 1:
+                    self.resulting_class_entry.insert(0, 'You must first train or load a model1!')
+                else:
+                    fr = open('models/' + str(self.recognizer.algorithm) + '_parameters.csv', 'r')
+                    lines = fr.readlines()
+                    fr.close()
+                    if len(lines)==len(self.subjects):
+                        for idx, el in enumerate(lines):
+                            lines[idx] = lines[idx][0:-1] + ',' + self.identities[self.subjects[idx]]
+                        fw = open('models/' + self.recognizer.algorithm + '_parameters.csv', 'w')
+                        for el in lines:
+                            fw.write(el + '\n')
+                        fw.close()
+                    else:
+                        self.resulting_class_entry.insert(0, "Parameters file is wrong!")
 
 
     def testModel(self, path): # create name_parameters.csv file with {subject,mean p, identity} columns
         p = []
+        fw = open("models/" + self.recognizer.algorithm + "_parameters.csv", "w")
         for subject in os.listdir(path):
             #	if subject.startswith("."):
             #		continue;
@@ -228,40 +248,69 @@ class RecognitionApp:
                     continue
                 if who == subject:
                     p.append(how_much)
-            with open("models/" + self.recognizer.algorithm + "_parameters.csv", "a") as file:
-                if len(p) > 0:
-                    file.write(subject + ',' + str(np.mean(p)) + '\n')
-                else:
-                    file.write(subject + ',' + 0 + '\n')
+            if len(p) > 0:
+                fw.write(subject + ',' + str(np.max(p)) + '\n')
+            else:
+                fw.write(subject + ',' + 0 + '\n')
             p = []
+        fw.close()
+
         print('koniec testow')
 
 
-    def loadModel(self):
-        try:
-            self.recognizer = s.Face_recognitor(str(self.alg_var.get()))
-            model_path = filedialog.askopenfile(title = "Select " + str(self.alg_var.get()) + " model XML file", filetypes=(("Text Files", "*.xml"),))
-            subjects_path = filedialog.askopenfile(title = "Select subjects csv file", filetypes = [("Text files","*.csv")])
-            parameters_path = filedialog.askopenfile(title = "Select parameters csv file", filetypes = [("Text files","*.csv")])
+    def loadModel(self, init = 0):
+        if init: # przy starcie aplikacji...
+            try:
+                self.recognizer = s.Face_recognitor(str(self.alg_var.get()))
+                model_path = 'models/' + str(self.alg_var.get()) + '_model.xml'
+                subjects_path = 'models/' + str(self.alg_var.get()) + '_subjects.csv'
+                parameters_path = 'models/' + str(self.alg_var.get()) + '_parameters.csv'
 
-            self.recognizer.read_model(model_path = model_path.name, subjects_path = subjects_path.name)
+                self.recognizer.read_model(model_path=model_path, subjects_path=subjects_path)
 
-            with open(subjects_path.name, "r") as file:
-                for f in file:
-                    self.subjects = f.split(',')
-                    self.subjects = self.subjects[0:-1]
-            self.resulting_class_entry.delete(0,tki.END)
-            self.resulting_class_entry.insert(0,','.join(self.subjects))
+                with open(subjects_path, "r") as file:
+                    for f in file:
+                        self.subjects = f.split(',')
+                        self.subjects = self.subjects[0:-1]
+                self.resulting_class_entry.delete(0, tki.END)
+                self.resulting_class_entry.insert(0, ','.join(self.subjects))
 
-            fr = open(parameters_path.name, 'r')
-            lines = fr.readlines()
-            for idx, l in enumerate(lines):
-                list = lines[idx].split(',')
-                self.p_vals.update({list[0]: float(list[1])})
+                fr = open(parameters_path, 'r')
+                lines = fr.readlines()
+                self.identities = {}
+                for idx, l in enumerate(lines):
+                    list = lines[idx].split(',')
+                    self.p_vals.update({list[0]: float(list[1])})
+                    self.identities.update({list[0]: list[2]})
+                fr.close()
+                messagebox.showinfo('Load successful', 'Model was loaded!')
+            except:
+                messagebox.showinfo('Load unsuccessful', 'Wrong selected files')
+        else: # przy ładowaniu z poziomu konfiguracji
+            try:
+                self.recognizer = s.Face_recognitor(str(self.alg_var.get()))
+                model_path = filedialog.askopenfile(title = "Select " + str(self.alg_var.get()) + " model XML file", filetypes=(("Text Files", "*.xml"),))
+                subjects_path = filedialog.askopenfile(title = "Select subjects csv file", filetypes = [("Text files","*.csv")])
+                parameters_path = filedialog.askopenfile(title = "Select parameters csv file", filetypes = [("Text files","*.csv")])
 
-            messagebox.showinfo('Load successful', 'Model was loaded!')
-        except:
-            messagebox.showinfo('Load unsuccessful', 'Wrong selected files')
+                self.recognizer.read_model(model_path = model_path.name, subjects_path = subjects_path.name)
+
+                with open(subjects_path.name, "r") as file:
+                    for f in file:
+                        self.subjects = f.split(',')
+                        self.subjects = self.subjects[0:-1]
+                self.resulting_class_entry.delete(0,tki.END)
+                self.resulting_class_entry.insert(0,','.join(self.subjects))
+
+                fr = open(parameters_path.name, 'r')
+                lines = fr.readlines()
+                for idx, l in enumerate(lines):
+                    list = lines[idx].split(',')
+                    self.p_vals.update({list[0]: float(list[1])})
+
+                messagebox.showinfo('Load successful', 'Model was loaded!')
+            except:
+                messagebox.showinfo('Load unsuccessful', 'Wrong selected files')
 
 
     def createModel(self):
@@ -281,6 +330,11 @@ class RecognitionApp:
     def radioChecked(self): # unnecessary
         print(self.alg_var.get())
 
+
+    def confirmModel(self):
+        messagebox.showinfo('Complete the face recognition configuration','The configuration has been saved, do not manipulate files inside the "Recognition Systems" and "models" folders.')
+        with open('Recognition Systems/set.txt', 'w') as file:
+            file.write('1,' + str(self.alg_var.get()))
 
 
 root = tki.Tk()
