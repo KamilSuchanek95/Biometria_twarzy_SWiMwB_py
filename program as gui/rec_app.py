@@ -117,14 +117,17 @@ class RecognitionApp:
         # ... #
 
         # initial code:
-        isSet = open('Recognition Systems/set.txt', 'r')
-        line_of_set = isSet.readline().split(',')
-        if float(line_of_set[0]) < 1:
-            messagebox.showinfo('Init program','You must configure the program!\nGo to the face recognition configuration panel and train / load the model')
-        else:
-            self.alg_var.set(line_of_set[1])
-            self.loadModel(init=1)
-
+        try:
+            isSet = open('Recognition Systems/set.txt', 'r')
+            line_of_set = isSet.readline().split(',')
+            if float(line_of_set[0]) < 1:
+                messagebox.showinfo('Init program','You must configure the program!\nGo to the face recognition configuration panel and train / load the model')
+            else:
+                self.alg_var.set(line_of_set[1])
+                self.loadModel(init=1)
+        except:
+            messagebox.showinfo('Init program',
+                                'You must configure the program!\nGo to the face recognition configuration panel and train / load the model')
 
     def turnOnCamera(self):
         if self.off:
@@ -179,18 +182,22 @@ class RecognitionApp:
 
     def recognizeFace(self):
         if self.alg_var.get() != 'lbph':
-            eg = 1
+            eq = 1
         else:
             eq = 0
         img, p_val, subject = self.recognizer.predict(self.current_image, eq = eq)
         if img is None:
             messagebox.showinfo('Recognition imformation', 'No face detected!')
         else:
-            if self.identity_entry.get() == self.identities[subject]: # jeśli wykryto Cie tak jak sie podpisałeś...
-                if self.p_vals[subject] >= p_val: # z wymaganą dokładnością...
+            if self.identity_entry.get() == self.identities[subject] & self.p_vals[subject] >= p_val: # z wymaganą dokładnością...
                     messagebox.showinfo('Recognition result','You are really ' + self.identities[subject] + '.\nAcces allowed.')
             elif self.p_vals[subject] >= p_val:
-                messagebox.showinfo('Recognition result', 'You are not ' + self.identity_entry.get() + ",\n  You have been recognized as " + self.identities[subject] + ".\n Access denied.")
+                messagebox.showinfo('Recognition result', 'You are not ' + self.identity_entry.get() + ",\n  But you have been recognized as " + self.identities[subject] + ".\n Access denied.")
+                print('p_val:\t\t' + str(p_val) + '\n' +
+                      'self.p+val:\t\t' + str(self.p_vals[subject]) + '\n' +
+                      'entry.ID:\t\t' + self.identity_entry.get() + '\n' +
+                      'subject:\t\t' + subject + '\n' +
+                      'self.ID:\t\t' + self.identities[subject])
             else:
                 messagebox.showinfo('Recognition result','Not recognized approved person\n')
                 print('p_val:\t\t'      + str(p_val) + '\n' +
@@ -211,6 +218,7 @@ class RecognitionApp:
     def createIdentityClasses(self):
         fr = open('models/' + str(self.recognizer.algorithm) + '_parameters.csv', 'r')
         if len(fr.readline().split(',')) < 3:
+            fr.close()
             identityList = self.resulting_class_entry.get().split(',')
             if(len(identityList)) == len(self.subjects):
                 self.identities = dict(zip(self.subjects, identityList))
@@ -229,6 +237,8 @@ class RecognitionApp:
                         fw.close()
                     else:
                         self.resulting_class_entry.insert(0, "Parameters file is wrong!")
+            else:
+                messagebox.showinfo('Error entered Ids list','Lengths of IDs list and subjects is not equal')
 
 
     def testModel(self, path): # create name_parameters.csv file with {subject,mean p, identity} columns
@@ -280,8 +290,8 @@ class RecognitionApp:
                 self.identities = {}
                 for idx, l in enumerate(lines):
                     list = lines[idx].split(',')
-                    self.p_vals.update({list[0]: float(list[1])})
-                    self.identities.update({list[0]: list[2]})
+                    self.p_vals.update({list[0]: float(list[1].strip())})
+                    self.identities.update({list[0]: list[2].strip()})
                 fr.close()
                 messagebox.showinfo('Load successful', 'Model was loaded!')
             except:
@@ -296,8 +306,7 @@ class RecognitionApp:
                 self.recognizer.read_model(model_path = model_path.name, subjects_path = subjects_path.name)
 
                 with open(subjects_path.name, "r") as file:
-                    for f in file:
-                        self.subjects = f.split(',')
+                        self.subjects = file.readline().split(',')
                         self.subjects = self.subjects[0:-1]
                 self.resulting_class_entry.delete(0,tki.END)
                 self.resulting_class_entry.insert(0,','.join(self.subjects))
@@ -307,6 +316,7 @@ class RecognitionApp:
                 for idx, l in enumerate(lines):
                     list = lines[idx].split(',')
                     self.p_vals.update({list[0]: float(list[1])})
+                    self.identities.update({list[0]: list[2].strip()})
 
                 messagebox.showinfo('Load successful', 'Model was loaded!')
             except:

@@ -10,3 +10,5 @@ old training and test/test_images/
 *.jpeg
 
 test_images/
+
+venv/
