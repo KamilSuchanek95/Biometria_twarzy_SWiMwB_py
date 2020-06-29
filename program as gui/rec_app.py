@@ -9,6 +9,8 @@ import os
 import numpy as np
 import ipdb as i
 
+#theme = ttk.Style()
+#theme.theme_use('alt')
 
 class RecognitionApp:
 
@@ -200,15 +202,15 @@ class RecognitionApp:
                       'self.ID:\t\t' + self.identities[subject])
             else:
                 messagebox.showinfo('Recognition result','Not recognized approved person\n')
-                print('p_val:\t\t'      + str(p_val) + '\n' +
+                print('p_val:\t\t' + str(p_val) + '\n' +
                       'self.p+val:\t\t' + str(self.p_vals[subject]) + '\n' +
                       'entry.ID:\t\t' + self.identity_entry.get() + '\n' +
                       'subject:\t\t' + subject + '\n' +
                       'self.ID:\t\t' + self.identities[subject])
-        ts = datetime.datetime.now()
-        filename = "{}.jpg".format(ts.strftime("%Y-%m-%d_%H-%M-%S"))
-        filename = "images/recognition_as_" + self.identity_entry.get() + '_recognized_as_' + self.identities[subject] + '_' + filename
-        cv2.imwrite(filename=filename, img=self.current_image)
+            ts = datetime.datetime.now()
+            filename = "{}.jpg".format(ts.strftime("%Y-%m-%d_%H-%M-%S"))
+            filename = "images/recognition_as_" + self.identity_entry.get() + '_recognized_as_' + self.identities[subject] + '_' + filename
+            cv2.imwrite(filename=filename, img=self.current_image)
 
 
     """# Face recognition configuration metods"""
