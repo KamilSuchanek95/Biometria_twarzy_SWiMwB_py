@@ -205,6 +205,10 @@ class RecognitionApp:
                       'entry.ID:\t\t' + self.identity_entry.get() + '\n' +
                       'subject:\t\t' + subject + '\n' +
                       'self.ID:\t\t' + self.identities[subject])
+        ts = datetime.datetime.now()
+        filename = "{}.jpg".format(ts.strftime("%Y-%m-%d_%H-%M-%S"))
+        filename = "images/recognition_as_" + self.identity_entry.get() + '_recognized_as_' + self.identities[subject] + '_' + filename
+        cv2.imwrite(filename=filename, img=self.current_image)
 
 
     """# Face recognition configuration metods"""
