@@ -38,7 +38,7 @@ class RecognitionApp:
         self.ecg_configuration_tab = ttk.Frame(self.tab_control)
         self.tab_control.add(self.recognition_tab, text='Recognition panel')
         self.tab_control.add(self.rec_configuration_tab, text='Face recognition configuration panel')
-        self.tab_control.add(self.temp_configuration_tab, text='Temperature verification configudration panel')
+        self.tab_control.add(self.temp_configuration_tab, text='Temperature verification configuration panel')
         self.tab_control.add(self.ecg_configuration_tab, text='ECG recognition configuration panel')
         self.tab_control.grid(column=0,row=0)
 
@@ -189,7 +189,7 @@ class RecognitionApp:
         if img is None:
             messagebox.showinfo('Recognition imformation', 'No face detected!')
         else:
-            if self.identity_entry.get() == self.identities[subject] & self.p_vals[subject] >= p_val: # z wymaganą dokładnością...
+            if self.identity_entry.get() == self.identities[subject] and self.p_vals[subject] >= p_val: # z wymaganą dokładnością...
                     messagebox.showinfo('Recognition result','You are really ' + self.identities[subject] + '.\nAcces allowed.')
             elif self.p_vals[subject] >= p_val:
                 messagebox.showinfo('Recognition result', 'You are not ' + self.identity_entry.get() + ",\n  But you have been recognized as " + self.identities[subject] + ".\n Access denied.")
