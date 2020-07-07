@@ -5,8 +5,8 @@
 
 import numpy as np
 import cv2
-import matplotlib as plot
-import ipdb
+# import matplotlib as plot
+# import ipdb
 import os
 
 class Face_detector:

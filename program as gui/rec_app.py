@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import SWiMwB as s
 import tkinter as tki
 from tkinter import messagebox, ttk, filedialog
@@ -11,6 +12,7 @@ import ipdb as i
 
 #theme = ttk.Style()
 #theme.theme_use('alt')
+
 
 class RecognitionApp:
 
@@ -266,8 +268,10 @@ class RecognitionApp:
                     p.append(how_much)
             if len(p) > 0:
                 fw.write(subject + ',' + str(np.max(p)) + '\n')
+                self.p_vals.update({subject: np.max(p)})
             else:
                 fw.write(subject + ',' + 0 + '\n')
+                self.p_vals.update({subject: 0})
             p = []
         fw.close()
 
@@ -352,8 +356,14 @@ class RecognitionApp:
         with open('Recognition Systems/set.txt', 'w') as file:
             file.write('1,' + str(self.alg_var.get()))
 
+# create folders if they don't exist
+my_dirs = ['Recognition Systems', 'models', 'images']
+for dir in my_dirs:
+	if not os.path.exists(dir):
+		os.makedirs(dir)
 
-root = tki.Tk()
-img = ImageTk.PhotoImage(Image.open('init_image.jpg'))
-appli = RecognitionApp(root, img)
-appli.window.mainloop()
+
+root = tki.Tk() # create a GUI object with Tk
+img = ImageTk.PhotoImage(Image.open('init_image.jpg')) # load initial image for app
+appli = RecognitionApp(root, img) # create RecognitionApp's instance 
+appli.window.mainloop() # start application
