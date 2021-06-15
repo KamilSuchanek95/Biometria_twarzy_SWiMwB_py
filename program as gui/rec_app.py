@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+
 import SWiMwB as s
 import tkinter as tki
 from tkinter import messagebox, ttk, filedialog
@@ -9,10 +10,6 @@ from PIL import Image, ImageTk
 import os
 import numpy as np
 import ipdb as i
-
-#theme = ttk.Style()
-#theme.theme_use('alt')
-
 
 class RecognitionApp:
 
@@ -29,89 +26,92 @@ class RecognitionApp:
         self.current_image = img
         self.init_image = img
 
-        # ustawienia okna aplikacji
-        self.window = root
-        self.window.wm_title("Prototyp aplikacji systemu biometrycznego")
-        self.window.config(background="#004890")
-        self.window.protocol("WM_DELETE_WINDOW", self.onClose)
-        # ustawienia paneli aplikacji
-        self.tab_control = ttk.Notebook(self.window)
-        self.recognition_tab = ttk.Frame(self.tab_control)
-        self.rec_configuration_tab = ttk.Frame(self.tab_control)
-        self.temp_configuration_tab = ttk.Frame(self.tab_control)
-        self.ecg_configuration_tab = ttk.Frame(self.tab_control)
-        self.tab_control.add(self.recognition_tab, text='Recognition panel')
-        self.tab_control.add(self.rec_configuration_tab, text='Face recognition configuration panel')
-        self.tab_control.add(self.temp_configuration_tab, text='Temperature verification configuration panel')
-        self.tab_control.add(self.ecg_configuration_tab, text='ECG recognition configuration panel')
-        self.tab_control.grid(column=0,row=0)
+        
+        def do_window_settings(self):
+            # ustawienia okna aplikacji
+            self.window = root
+            self.window.wm_title("Prototyp aplikacji systemu biometrycznego")
+            self.window.config(background="#004890")
+            self.window.protocol("WM_DELETE_WINDOW", self.onClose)
+            # ustawienia paneli aplikacji
+            
+            self.tab_control = ttk.Notebook(self.window)
+            self.recognition_tab = ttk.Frame(self.tab_control)
+            self.rec_configuration_tab = ttk.Frame(self.tab_control)
+            self.temp_configuration_tab = ttk.Frame(self.tab_control)
+            self.ecg_configuration_tab = ttk.Frame(self.tab_control)
+            self.tab_control.add(self.recognition_tab, text='Recognition panel')
+            self.tab_control.add(self.rec_configuration_tab, text='Face recognition configuration panel')
+            self.tab_control.add(self.temp_configuration_tab, text='Temperature verification configuration panel')
+            self.tab_control.add(self.ecg_configuration_tab, text='ECG recognition configuration panel')
+            self.tab_control.grid(column=0,row=0)
 
-        """ Kontrolki w panelu "Recognition panel" """
-        """# podgląd kamerki"""
-        self.camera_label = tki.Label(self.recognition_tab, image = img)
-        self.camera_label.grid(row=0,column=0, sticky='nsew')
-        """# rozdzielacz podglądu od przycisków"""
-        self.sep = ttk.Separator(self.recognition_tab, orient="vertical")
-        self.sep.grid(column=1, sticky='ns', columnspan=2)
-        """# ramka przycisków, aby grupowala je w pionie, nadal w jednym wierszu, który również zawiera podgląd"""
-        self.frame_controls = tki.Frame(self.recognition_tab, background="#F55255")
-        self.frame_controls.grid(row=0, column=3,columnspan=1, sticky='nsew')
-        """# kontrolki w panelu bocznym (ramce)"""
-        self.identity_label = tki.Label(self.frame_controls, text = 'Enter Your identity: ', borderwidth=4, relief="groove")
-        self.identity_label.grid(sticky='nsew')
-        self.identity_entry = tki.Entry(self.frame_controls, width=10, borderwidth=4, relief="solid")
-        self.identity_entry.grid(sticky='nsew')
-        self.button_camera_on = tki.Button(self.frame_controls, text="Turn on the camera", command=self.buttonCamera, borderwidth=4, relief='ridge')
-        self.button_camera_on.grid(sticky='nsew')
-        self.button_camera_off = tki.Button(self.frame_controls, text="Turn off the camera", command=self.turnOffCamera, borderwidth=4, relief='ridge')
-        self.button_camera_off.grid(sticky='nsew')
-        self.button_get_image = tki.Button(self.frame_controls, text="Get the image", command=self.getImage, borderwidth=4, relief='ridge')
-        self.button_get_image.grid(sticky='nsew')
-        self.button_recognize = tki.Button(self.frame_controls, text="Recognize the face", command=self.recognizeFace, borderwidth=4, relief='ridge')
-        self.button_recognize.grid(sticky='nsew')
+            """ Kontrolki w panelu "Recognition panel" """
+            """# podgląd kamerki"""
+            self.camera_label = tki.Label(self.recognition_tab, image = img)
+            self.camera_label.grid(row=0,column=0, sticky='nsew')
+            """# rozdzielacz podglądu od przycisków"""
+            self.sep = ttk.Separator(self.recognition_tab, orient="vertical")
+            self.sep.grid(column=1, sticky='ns', columnspan=2)
+            """# ramka przycisków, aby grupowala je w pionie, nadal w jednym wierszu, który również zawiera podgląd"""
+            self.frame_controls = tki.Frame(self.recognition_tab, background="#F55255")
+            self.frame_controls.grid(row=0, column=3,columnspan=1, sticky='nsew')
+            """# kontrolki w panelu bocznym (ramce)"""
+            self.identity_label = tki.Label(self.frame_controls, text = 'Enter Your identity: ', borderwidth=4, relief="groove")
+            self.identity_label.grid(sticky='nsew')
+            self.identity_entry = tki.Entry(self.frame_controls, width=10, borderwidth=4, relief="solid")
+            self.identity_entry.grid(sticky='nsew')
+            self.button_camera_on = tki.Button(self.frame_controls, text="Turn on the camera", command=self.buttonCamera, borderwidth=4, relief='ridge')
+            self.button_camera_on.grid(sticky='nsew')
+            self.button_camera_off = tki.Button(self.frame_controls, text="Turn off the camera", command=self.turnOffCamera, borderwidth=4, relief='ridge')
+            self.button_camera_off.grid(sticky='nsew')
+            self.button_get_image = tki.Button(self.frame_controls, text="Get the image", command=self.getImage, borderwidth=4, relief='ridge')
+            self.button_get_image.grid(sticky='nsew')
+            self.button_recognize = tki.Button(self.frame_controls, text="Recognize the face", command=self.recognizeFace, borderwidth=4, relief='ridge')
+            self.button_recognize.grid(sticky='nsew')
 
-        """ Kontrolki w panelu "Face recognition configuration panel" """
-        self.frame_training = tki.Frame(self.rec_configuration_tab, background="#F50055")
-        self.frame_training.grid(row=0, column=0,columnspan=3, sticky='nsew')
-        # training path settings
-        self.training_images_label = tki.Label(self.frame_training, text="Training images path: ")
-        self.training_images_label.grid(row=0, column=0, columnspan=2, sticky='nsew')
-        self.training_path_entry = tki.Entry(self.frame_training, borderwidth=4, relief='ridge'); self.training_path_entry.insert(tki.END, "for example: .../training_images")
-        self.training_path_entry.grid(row=1, column=0, columnspan=3, sticky='nsew')
-        self.training_path_select_button = tki.Button(self.frame_training, command=partial(self.getPath, self.training_path_entry), text='Select path\nor entry below:', relief='solid')
-        self.training_path_select_button.grid(row=0, column=2,sticky='nsew')
-        """# testing path settings"""
-        self.testing_images_label = tki.Label(self.frame_training, text="Testing images path: ")
-        self.testing_images_label.grid(row=2, column=0, columnspan=2, sticky='nsew')
-        self.testing_path_entry = tki.Entry(self.frame_training, text = '', borderwidth=4, relief='ridge'); self.testing_path_entry.insert(tki.END, "for example: .../testing_images")
-        self.testing_path_entry.grid(row=3, column=0, columnspan=3, sticky='nsew')
-        self.testing_path_select_button = tki.Button(self.frame_training, command=partial(self.getPath, self.testing_path_entry), text='Select path\nor entry below:', relief='solid')
-        self.testing_path_select_button.grid(row=2, column=2,sticky='nsew')
-        """# select algorithm"""
-        self.alg_var = tki.StringVar(self.frame_training, 'lbph')
-        self.alg_lbph_radio = tki.Radiobutton(self.frame_training, text="LBPH", command=self.radioChecked, variable = self.alg_var, val = 'lbph')
-        self.alg_lbph_radio.grid(row=4, column=0, sticky='nsew')
-        self.alg_fish_radio = tki.Radiobutton(self.frame_training, text="Fisherface", command=self.radioChecked, variable = self.alg_var, val = 'fisherface')
-        self.alg_fish_radio.grid(row=4, column=1, sticky='nsew')
-        self.alg_eigen_radio = tki.Radiobutton(self.frame_training, text="Eigenface", command=self.radioChecked, variable = self.alg_var, val = 'eigenface')
-        self.alg_eigen_radio.grid(row=4, column=2, sticky='nsew')
-        """# train model or load model """
-        self.create_model_button = tki.Button(self.frame_training, command=self.createModel, text='If You selected necessary paths\nClick and train model', relief='solid')
-        self.create_model_button.grid(row=5, column=0, columnspan=2, sticky='nsew')
-        self.create_model_button = tki.Button(self.frame_training, command=self.loadModel, text='Or load model\nfrom file', relief='solid')
-        self.create_model_button.grid(row=5, column=2, columnspan=1, sticky='nsew')
-        """# classes of resulting model"""
-        self.resulting_classes_label = tki.Message(self.frame_training, text="Replace the class names \"s0, s1, ...\" with real identity names by selecting the folder name, e.g. \"s0\" and entering \"Adam Kowalski\" instead, without removing a commas, each identity name must be exactly on the position of the folder name being replaced. \n\nSo, having a list: \"s0, s1, s10\", assuming that s0 is assigned to the identity \"Adam Kowalski\", s1 to \"Marta Brzdż\" and s10 to \"Lucyna Puf\", then the text \"s0, s1, s10\" must be replaced by \"Adam Kowalski, Marta Brzdż, Lucyna Puf \" :")
-        self.resulting_classes_label.grid(row=6, column=0, columnspan=2, sticky='nsew')
-        self.resulting_class_entry = tki.Entry(self.frame_training, borderwidth=4, relief='ridge'); self.resulting_class_entry.insert(tki.END, "for example: s0,s1,s10,s11,s12,s2,s3")
-        self.resulting_class_entry.grid(row=7, column=0, columnspan=3, sticky='nsew')
-        self.confirmation_classes_button = tki.Button(self.frame_training, text='Confirm the\nchanged list', relief='solid', command=self.createIdentityClasses)
-        self.confirmation_classes_button.grid(row=6, column=2,sticky='nsew')
-        """# save configurations"""
-        self.save_configuration_button = tki.Button(self.frame_training, text='Save configuration', relief='solid', command=self.confirmModel)
-        self.save_configuration_button.grid(row=8, column=0, columnspan=3, sticky='nsew')
+            """ Kontrolki w panelu "Face recognition configuration panel" """
+            self.frame_training = tki.Frame(self.rec_configuration_tab, background="#F50055")
+            self.frame_training.grid(row=0, column=0,columnspan=3, sticky='nsew')
+            # training path settings
+            self.training_images_label = tki.Label(self.frame_training, text="Training images path: ")
+            self.training_images_label.grid(row=0, column=0, columnspan=2, sticky='nsew')
+            self.training_path_entry = tki.Entry(self.frame_training, borderwidth=4, relief='ridge'); self.training_path_entry.insert(tki.END, "for example: .../training_images")
+            self.training_path_entry.grid(row=1, column=0, columnspan=3, sticky='nsew')
+            self.training_path_select_button = tki.Button(self.frame_training, command=partial(self.getPath, self.training_path_entry), text='Select path\nor entry below:', relief='solid')
+            self.training_path_select_button.grid(row=0, column=2,sticky='nsew')
+            """# testing path settings"""
+            self.testing_images_label = tki.Label(self.frame_training, text="Testing images path: ")
+            self.testing_images_label.grid(row=2, column=0, columnspan=2, sticky='nsew')
+            self.testing_path_entry = tki.Entry(self.frame_training, text = '', borderwidth=4, relief='ridge'); self.testing_path_entry.insert(tki.END, "for example: .../testing_images")
+            self.testing_path_entry.grid(row=3, column=0, columnspan=3, sticky='nsew')
+            self.testing_path_select_button = tki.Button(self.frame_training, command=partial(self.getPath, self.testing_path_entry), text='Select path\nor entry below:', relief='solid')
+            self.testing_path_select_button.grid(row=2, column=2,sticky='nsew')
+            """# select algorithm"""
+            self.alg_var = tki.StringVar(self.frame_training, 'lbph')
+            self.alg_lbph_radio = tki.Radiobutton(self.frame_training, text="LBPH", command=self.radioChecked, variable = self.alg_var, val = 'lbph')
+            self.alg_lbph_radio.grid(row=4, column=0, sticky='nsew')
+            self.alg_fish_radio = tki.Radiobutton(self.frame_training, text="Fisherface", command=self.radioChecked, variable = self.alg_var, val = 'fisherface')
+            self.alg_fish_radio.grid(row=4, column=1, sticky='nsew')
+            self.alg_eigen_radio = tki.Radiobutton(self.frame_training, text="Eigenface", command=self.radioChecked, variable = self.alg_var, val = 'eigenface')
+            self.alg_eigen_radio.grid(row=4, column=2, sticky='nsew')
+            """# train model or load model """
+            self.create_model_button = tki.Button(self.frame_training, command=self.createModel, text='If You selected necessary paths\nClick and train model', relief='solid')
+            self.create_model_button.grid(row=5, column=0, columnspan=2, sticky='nsew')
+            self.create_model_button = tki.Button(self.frame_training, command=self.loadModel, text='Or load model\nfrom file', relief='solid')
+            self.create_model_button.grid(row=5, column=2, columnspan=1, sticky='nsew')
+            """# classes of resulting model"""
+            self.resulting_classes_label = tki.Message(self.frame_training, text="Replace the class names \"s0, s1, ...\" with real identity names by selecting the folder name, e.g. \"s0\" and entering \"Adam Kowalski\" instead, without removing a commas, each identity name must be exactly on the position of the folder name being replaced. \n\nSo, having a list: \"s0, s1, s10\", assuming that s0 is assigned to the identity \"Adam Kowalski\", s1 to \"Marta Brzdż\" and s10 to \"Lucyna Puf\", then the text \"s0, s1, s10\" must be replaced by \"Adam Kowalski, Marta Brzdż, Lucyna Puf \" :")
+            self.resulting_classes_label.grid(row=6, column=0, columnspan=2, sticky='nsew')
+            self.resulting_class_entry = tki.Entry(self.frame_training, borderwidth=4, relief='ridge'); self.resulting_class_entry.insert(tki.END, "for example: s0,s1,s10,s11,s12,s2,s3")
+            self.resulting_class_entry.grid(row=7, column=0, columnspan=3, sticky='nsew')
+            self.confirmation_classes_button = tki.Button(self.frame_training, text='Confirm the\nchanged list', relief='solid', command=self.createIdentityClasses)
+            self.confirmation_classes_button.grid(row=6, column=2,sticky='nsew')
+            """# save configurations"""
+            self.save_configuration_button = tki.Button(self.frame_training, text='Save configuration', relief='solid', command=self.confirmModel)
+            self.save_configuration_button.grid(row=8, column=0, columnspan=3, sticky='nsew')
 
-
+        do_window_settings(self)
         """ Kontrolki w panelu "Temperature verification configuration panel" """
 
         # ... #
@@ -364,6 +364,9 @@ for dir in my_dirs:
 
 
 root = tki.Tk() # create a GUI object with Tk
-img = ImageTk.PhotoImage(Image.open('init_image.jpg')) # load initial image for app
+# InitImage.jpg
+image_path = os.path.dirname(os.path.realpath(__file__)) + '/InitImage.jpg'
+img = ImageTk.PhotoImage(Image.open(image_path)) # load initial image for app
+# img = tki.PhotoImage(file = "init_image.jpg")
 appli = RecognitionApp(root, img) # create RecognitionApp's instance 
 appli.window.mainloop() # start application
