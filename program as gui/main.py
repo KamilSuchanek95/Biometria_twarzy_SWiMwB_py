@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+#new
+from supportmodule import *
+
 import SWiMwB as s
 import tkinter as tki
 from tkinter import messagebox, ttk, filedialog
@@ -7,7 +10,6 @@ from functools import partial
 import cv2
 import datetime
 from PIL import Image, ImageTk
-import os
 import numpy as np
 import ipdb as i
 
@@ -26,7 +28,19 @@ class RecognitionApp:
         self.current_image = img
         self.init_image = img
 
-        
+        def initial_work(self):
+            try:
+                isSet = open('Recognition Systems/set.txt', 'r')
+                line_of_set = isSet.readline().split(',')
+                if float(line_of_set[0]) < 1:
+                    messagebox.showinfo('Init program','You must configure the program!\nGo to the face recognition configuration panel and train / load the model')
+                else:
+                    self.alg_var.set(line_of_set[1])
+                    self.loadModel(init=1)
+            except:
+                messagebox.showinfo('Init program',
+                                    'You must configure the program!\nGo to the face recognition configuration panel and train / load the model')
+
         def do_window_settings(self):
             # ustawienia okna aplikacji
             self.window = root
@@ -112,26 +126,9 @@ class RecognitionApp:
             self.save_configuration_button.grid(row=8, column=0, columnspan=3, sticky='nsew')
 
         do_window_settings(self)
-        """ Kontrolki w panelu "Temperature verification configuration panel" """
 
-        # ... #
-
-        """ Kontrolki w panelu "ECG recognition configuration panel" """
-
-        # ... #
-
-        # initial code:
-        try:
-            isSet = open('Recognition Systems/set.txt', 'r')
-            line_of_set = isSet.readline().split(',')
-            if float(line_of_set[0]) < 1:
-                messagebox.showinfo('Init program','You must configure the program!\nGo to the face recognition configuration panel and train / load the model')
-            else:
-                self.alg_var.set(line_of_set[1])
-                self.loadModel(init=1)
-        except:
-            messagebox.showinfo('Init program',
-                                'You must configure the program!\nGo to the face recognition configuration panel and train / load the model')
+        
+        initial_work(self)
 
     def turnOnCamera(self):
         if self.off:
@@ -356,17 +353,13 @@ class RecognitionApp:
         with open('Recognition Systems/set.txt', 'w') as file:
             file.write('1,' + str(self.alg_var.get()))
 
-# create folders if they don't exist
-my_dirs = ['Recognition Systems', 'models', 'images']
-for dir in my_dirs:
-	if not os.path.exists(dir):
-		os.makedirs(dir)
 
+def start_application():
+    root = tki.Tk() # create a GUI object with Tk
+    default_image = ImageTk.PhotoImage(Image.open(DEFAULT_IMAGE_PATH))
+    appli = RecognitionApp(root, default_image) # create RecognitionApp's instance 
+    appli.window.mainloop() # start application
 
-root = tki.Tk() # create a GUI object with Tk
-# InitImage.jpg
-image_path = os.path.dirname(os.path.realpath(__file__)) + '/InitImage.jpg'
-img = ImageTk.PhotoImage(Image.open(image_path)) # load initial image for app
-# img = tki.PhotoImage(file = "init_image.jpg")
-appli = RecognitionApp(root, img) # create RecognitionApp's instance 
-appli.window.mainloop() # start application
+create_app_folders_if_they_dont_exist()
+start_application()
+
