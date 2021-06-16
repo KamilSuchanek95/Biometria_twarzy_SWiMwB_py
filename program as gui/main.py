@@ -28,20 +28,20 @@ class RecognitionApp:
         self.current_image = img
         self.init_image = img
 
-        def initial_work(self):
+        def initialWork(self):
             try:
-                isSet = open('Recognition Systems/set.txt', 'r')
-                line_of_set = isSet.readline().split(',')
-                if float(line_of_set[0]) < 1:
-                    messagebox.showinfo('Init program','You must configure the program!\nGo to the face recognition configuration panel and train / load the model')
+                with open(PROGRAM_STATE_FILE_PATH, 'r') as f: r = f.read(); [isSet, algorithm] = r.split(',')
+                if float(IsSet) < 1:
+                    messagebox.showinfo('Init program',
+                                        'You must configure the program!\nGo to the face recognition configuration panel and train / load the model')
                 else:
-                    self.alg_var.set(line_of_set[1])
-                    self.loadModel(init=1)
+                    self.alg_var.set(algorithm)
+                    self.loadModelFirstTime()
             except:
                 messagebox.showinfo('Init program',
                                     'You must configure the program!\nGo to the face recognition configuration panel and train / load the model')
 
-        def do_window_settings(self):
+        def doWindowSettings(self):
             # ustawienia okna aplikacji
             self.window = root
             self.window.wm_title("Prototyp aplikacji systemu biometrycznego")
@@ -125,10 +125,10 @@ class RecognitionApp:
             self.save_configuration_button = tki.Button(self.frame_training, text='Save configuration', relief='solid', command=self.confirmModel)
             self.save_configuration_button.grid(row=8, column=0, columnspan=3, sticky='nsew')
 
-        do_window_settings(self)
+        doWindowSettings(self)
 
         
-        initial_work(self)
+        initialWork(self)
 
     def turnOnCamera(self):
         if self.off:
@@ -274,35 +274,22 @@ class RecognitionApp:
 
         print('koniec testow')
 
+    def loadModelFirstTime(self):
+        algorithm = self.alg_var.get()
+        try:
+            self.recognizer = s.Face_recognitor(algorithm)
+            [model_path, parameters_path, subjects_path] = getModelDataFromResources(algorithm)
+            self.recognizer.read_model(model_path=model_path, subjects_path=subjects_path)
+            updateSubjectsTextEntry(subjects_path)
+            setPvalsAndIdentities(parameters_path)
+            messagebox.showinfo('Load successful', 'Model was loaded!')
+        except:
+            messagebox.showinfo('Load unsuccessful', 'Wrong selected files')
 
-    def loadModel(self, init = 0):
+
+    def loadModel(self):
         if init: # przy starcie aplikacji...
-            try:
-                self.recognizer = s.Face_recognitor(str(self.alg_var.get()))
-                model_path = 'models/' + str(self.alg_var.get()) + '_model.xml'
-                subjects_path = 'models/' + str(self.alg_var.get()) + '_subjects.csv'
-                parameters_path = 'models/' + str(self.alg_var.get()) + '_parameters.csv'
-
-                self.recognizer.read_model(model_path=model_path, subjects_path=subjects_path)
-
-                with open(subjects_path, "r") as file:
-                    for f in file:
-                        self.subjects = f.split(',')
-                        self.subjects = self.subjects[0:-1]
-                self.resulting_class_entry.delete(0, tki.END)
-                self.resulting_class_entry.insert(0, ','.join(self.subjects))
-
-                fr = open(parameters_path, 'r')
-                lines = fr.readlines()
-                self.identities = {}
-                for idx, l in enumerate(lines):
-                    list = lines[idx].split(',')
-                    self.p_vals.update({list[0]: float(list[1].strip())})
-                    self.identities.update({list[0]: list[2].strip()})
-                fr.close()
-                messagebox.showinfo('Load successful', 'Model was loaded!')
-            except:
-                messagebox.showinfo('Load unsuccessful', 'Wrong selected files')
+            None
         else: # przy ładowaniu z poziomu konfiguracji
             try:
                 self.recognizer = s.Face_recognitor(str(self.alg_var.get()))
@@ -353,13 +340,34 @@ class RecognitionApp:
         with open('Recognition Systems/set.txt', 'w') as file:
             file.write('1,' + str(self.alg_var.get()))
 
+    #support metods
+    def setPvalsAndIdentities(self, parameters_path):
+        with open(parameters_path, 'r') as f: lines = f.readlines()
+        for l in lines:
+            list = l.split(',')
+            self.p_vals.update({l[0]: float(l[1].strip())})
+            self.identities.update({l[0]: l[2].strip()})
 
-def start_application():
+
+    def updateSubjectsTextEntry(self, subjects_path):
+        with open(subjects_path, "r") as f: lines = f.readlines
+        for l in lines:
+            self.subjects = l.split(',')[0:-1]
+            self.resulting_class_entry.delete(0, tki.END)
+            self.resulting_class_entry.insert(0, ','.join(self.subjects))
+
+
+
+
+
+
+def startApplication():
     root = tki.Tk() # create a GUI object with Tk
     default_image = ImageTk.PhotoImage(Image.open(DEFAULT_IMAGE_PATH))
     appli = RecognitionApp(root, default_image) # create RecognitionApp's instance 
     appli.window.mainloop() # start application
 
-create_app_folders_if_they_dont_exist()
-start_application()
+createResourcesIfTheyDontExists()
+
+startApplication()
 
