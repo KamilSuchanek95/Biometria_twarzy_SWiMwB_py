@@ -5,7 +5,7 @@ from supportmodule import *
 
 import SWiMwB as s
 import tkinter as tki
-from tkinter import messagebox, ttk, filedialog
+from tkinter import messagebox, ttk
 from functools import partial
 import cv2
 import datetime
@@ -112,7 +112,7 @@ class RecognitionApp:
             """# train model or load model """
             self.create_model_button = tki.Button(self.frame_training, command=self.createModel, text='If You selected necessary paths\nClick and train model', relief='solid')
             self.create_model_button.grid(row=5, column=0, columnspan=2, sticky='nsew')
-            self.create_model_button = tki.Button(self.frame_training, command=self.loadModel, text='Or load model\nfrom file', relief='solid')
+            self.create_model_button = tki.Button(self.frame_training, command=self.manuallyLoadModel, text='Or load model\nfrom file', relief='solid')
             self.create_model_button.grid(row=5, column=2, columnspan=1, sticky='nsew')
             """# classes of resulting model"""
             self.resulting_classes_label = tki.Message(self.frame_training, text="Replace the class names \"s0, s1, ...\" with real identity names by selecting the folder name, e.g. \"s0\" and entering \"Adam Kowalski\" instead, without removing a commas, each identity name must be exactly on the position of the folder name being replaced. \n\nSo, having a list: \"s0, s1, s10\", assuming that s0 is assigned to the identity \"Adam Kowalski\", s1 to \"Marta Brzdż\" and s10 to \"Lucyna Puf\", then the text \"s0, s1, s10\" must be replaced by \"Adam Kowalski, Marta Brzdż, Lucyna Puf \" :")
@@ -275,47 +275,26 @@ class RecognitionApp:
         print('koniec testow')
 
     def loadModelFirstTime(self):
-        algorithm = self.alg_var.get()
+        algorithm = str(self.alg_var.get())
+        model_paths = getModelDataFromResources(algorithm)
+        loadModel(algorithm, model_paths)
+
+
+    def manuallyLoadModel(self):
+        algorithm = str(self.alg_var.get())
+        model_paths = getMaluallyModelDataPaths(algorithm)
+        loadModel(algorithm, model_paths)
+
+    def loadModel(self, algorithm, model_paths):
+        [model_path, parameters_path, subjects_path] = model_paths
+        updateSubjectsTextEntry(subjects_path)
+        setPvalsAndIdentities(parameters_path)
         try:
             self.recognizer = s.Face_recognitor(algorithm)
-            [model_path, parameters_path, subjects_path] = getModelDataFromResources(algorithm)
-            self.recognizer.read_model(model_path=model_path, subjects_path=subjects_path)
-            updateSubjectsTextEntry(subjects_path)
-            setPvalsAndIdentities(parameters_path)
+            self.recognizer.read_model(model_path = model_path, subjects_path = subjects_path)
             messagebox.showinfo('Load successful', 'Model was loaded!')
         except:
             messagebox.showinfo('Load unsuccessful', 'Wrong selected files')
-
-
-    def loadModel(self):
-        if init: # przy starcie aplikacji...
-            None
-        else: # przy ładowaniu z poziomu konfiguracji
-            try:
-                self.recognizer = s.Face_recognitor(str(self.alg_var.get()))
-                model_path = filedialog.askopenfile(title = "Select " + str(self.alg_var.get()) + " model XML file", filetypes=(("Text Files", "*.xml"),))
-                subjects_path = filedialog.askopenfile(title = "Select subjects csv file", filetypes = [("Text files","*.csv")])
-                parameters_path = filedialog.askopenfile(title = "Select parameters csv file", filetypes = [("Text files","*.csv")])
-
-                self.recognizer.read_model(model_path = model_path.name, subjects_path = subjects_path.name)
-
-                with open(subjects_path.name, "r") as file:
-                        self.subjects = file.readline().split(',')
-                        self.subjects = self.subjects[0:-1]
-                self.resulting_class_entry.delete(0,tki.END)
-                self.resulting_class_entry.insert(0,','.join(self.subjects))
-
-                fr = open(parameters_path.name, 'r')
-                lines = fr.readlines()
-                for idx, l in enumerate(lines):
-                    list = lines[idx].split(',')
-                    self.p_vals.update({list[0]: float(list[1])})
-                    self.identities.update({list[0]: list[2].strip()})
-
-                messagebox.showinfo('Load successful', 'Model was loaded!')
-            except:
-                messagebox.showinfo('Load unsuccessful', 'Wrong selected files')
-
 
     def createModel(self):
         # create model object
@@ -355,9 +334,6 @@ class RecognitionApp:
             self.subjects = l.split(',')[0:-1]
             self.resulting_class_entry.delete(0, tki.END)
             self.resulting_class_entry.insert(0, ','.join(self.subjects))
-
-
-
 
 
 

@@ -67,4 +67,10 @@ def getModelDataFromResources(algorithm):
     }
     return switcher.get(algorithm, 'Invalid algorithm name.')
 
+from tkinter import filedialog
 
+def getModelDataFromResources(algorithm):
+    model_path = filedialog.askopenfile(title = "Select the model .xml file for the " + algorithm + " algorithm", filetypes=(("Text Files", "*.xml"),))
+    subjects_path = filedialog.askopenfile(title = "Select the subjects .csv file",     filetypes = [("Text files","*.csv")])
+    parameters_path = filedialog.askopenfile(title = "Select the parameters .csv file", filetypes = [("Text files","*.csv")])
+    return [model_path.name, parameters_path.name, subjects_path.name]
