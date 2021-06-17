@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 #new
+from tkinter.filedialog import LoadFileDialog
 from supportmodule import *
 
 import detector_and_recognitor as s
@@ -179,11 +180,7 @@ and train / load the model''')
         self.window.destroy()
 
     def recognize_face(self):
-        if self.alg_var.get() != 'lbph':
-            eq = 1
-        else:
-            eq = 0
-        img, p_val, subject = self.recognizer.predict(self.current_image, eq = eq)
+        img, p_val, subject = self.recognizer.predict(self.current_image)
         if img is None:
             messagebox.showinfo('Recognition imformation', 'No face detected!')
         else:
@@ -250,9 +247,9 @@ and train / load the model''')
             for t in oo:
                 test_img = cv2.imread(path + '/' + subject + "/" + t)
                 if self.recognizer.algorithm == 'lbph':
-                    predicted_img, how_much, who = self.recognizer.predict(test_img, eq=0)
+                    predicted_img, how_much, who = self.recognizer.predict(test_img)
                 else:
-                    predicted_img, how_much, who = self.recognizer.predict(test_img, eq=1)
+                    predicted_img, how_much, who = self.recognizer.predict(test_img)
                 if predicted_img is None:
                     continue
                 if who == subject:
@@ -268,27 +265,41 @@ and train / load the model''')
 
         print('koniec testow')
 
-    def load_model_first_time(self, algorithm):
-        # algorithm = str(self.alg_var.get())
-        model_paths = get_model_data_from_resources(algorithm)
-        load_model(algorithm, model_paths)
+    def set_pvals_and_identities(self, parameters_path):
+        with open(parameters_path, 'r') as f: lines = f.readlines()
+        for l in lines:
+            list = l.split(',')
+            self.p_vals.update({l[0]: float(l[1].strip())})
+            self.identities.update({l[0]: l[2].strip()})
 
-    def manually_load_model(self):
-        algorithm = str(self.alg_var.get())
-        model_paths = get_malually_model_data_paths(algorithm)
-        load_model(algorithm, model_paths)
+    def update_subjects_text_entry(self, subjects_path):
+        with open(subjects_path, "r") as f: lines = f.readlines
+        for l in lines:
+            self.subjects = l.split(',')[0:-1]
+            self.resulting_class_entry.delete(0, tki.END)
+            self.resulting_class_entry.insert(0, ','.join(self.subjects))
 
     def load_model(self, algorithm, model_paths):
         [model_path, parameters_path, subjects_path] = model_paths
-        updateSubjectsTextEntry(subjects_path)
-        setPvalsAndIdentities(parameters_path)
+        self.update_subjects_text_entry(subjects_path)
+        self.set_pvals_and_identities(parameters_path)
         try:
             self.recognizer = s.Face_recognitor(algorithm)
             self.recognizer.read_model(model_path = model_path, subjects_path = subjects_path)
             messagebox.showinfo('Load successful', 'Model was loaded!')
         except:
             messagebox.showinfo('Load unsuccessful', 'Wrong selected files')
+    
+    def load_model_first_time(self, algorithm):
+        # algorithm = str(self.alg_var.get())
+        model_paths = get_model_data_from_resources(algorithm)
+        self.load_model(algorithm, model_paths)
 
+    def manually_load_model(self):
+        algorithm = str(self.alg_var.get())
+        model_paths = get_malually_model_data_paths(algorithm)
+        self.load_model(algorithm, model_paths)
+    
     def create_model(self):
         # create model object
         self.recognizer = s.Face_recognitor(self.alg_var.get())
@@ -310,20 +321,7 @@ and train / load the model''')
         with open('Recognition Systems/set.txt', 'w') as file:
             file.write('1,' + str(self.alg_var.get()))
 
-    #support metods
-    def set_pvals_and_identities(self, parameters_path):
-        with open(parameters_path, 'r') as f: lines = f.readlines()
-        for l in lines:
-            list = l.split(',')
-            self.p_vals.update({l[0]: float(l[1].strip())})
-            self.identities.update({l[0]: l[2].strip()})
 
-    def update_subjects_text_entry(self, subjects_path):
-        with open(subjects_path, "r") as f: lines = f.readlines
-        for l in lines:
-            self.subjects = l.split(',')[0:-1]
-            self.resulting_class_entry.delete(0, tki.END)
-            self.resulting_class_entry.insert(0, ','.join(self.subjects))
 
 
 
