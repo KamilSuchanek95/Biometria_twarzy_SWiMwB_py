@@ -1,14 +1,14 @@
+# pliki
 *.jpg
-__pycache__/
-
-.idea/
-
-models/
-
-old training and test/test_images/
-
 *.jpeg
+*.xml
 
-test_images/
+# dziwne foldery
+__pycache__/*
+.idea/*
+venv/*
 
-venv/
+# exceptions
+!resources/default/DefaultImage.jpg
+!resources/models/haarcascade_frontalface_default.xml
+
