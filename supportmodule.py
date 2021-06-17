@@ -1,7 +1,7 @@
-# Constants module
+# module for help organize GUI code and PATHS
 
 import os
-
+from tkinter import filedialog
 
 # Paths
 #   core
@@ -45,15 +45,20 @@ PROGRAM_STATE_FILE_PATH         = os.path.join(PROGRAM_STATE_FOLDER_PATH, 'set.t
 
 # Functions
 
-def createResourcesIfTheyDontExists():
+def create_resources_if_they_dont_exists():
     # create folders
     for dir in [MODELS_FILES_PATH, IMAGES_PATH, PROGRAM_STATE_FOLDER_PATH]:
         os.makedirs(dir) if not os.path.exists(dir) else None
-    # create set.txt
-    with open(PROGRAM_STATE_FILE_PATH, 'a+') as f: f.write('0,') if not os.path.isfile(PROGRAM_STATE_FILE_PATH) else None
+    # create set.txt or overwrite if empty
+    if not os.path.isfile(PROGRAM_STATE_FILE_PATH):
+        with open(PROGRAM_STATE_FILE_PATH, 'a') as f: f.write('0,')
+    else:
+        with open(PROGRAM_STATE_FILE_PATH, 'r+') as f: 
+            not_empty = f.read(1)
+            None if not_empty else f.write('0,')
     
 
-def getModelDataFromResources(algorithm):
+def get_model_data_from_resources(algorithm):
     switcher = {
                 'lbph':         [LBPH_MODEL_PATH,
                                  LBPH_PARAMETERS_PATH,
@@ -67,9 +72,8 @@ def getModelDataFromResources(algorithm):
     }
     return switcher.get(algorithm, 'Invalid algorithm name.')
 
-from tkinter import filedialog
 
-def getModelDataFromResources(algorithm):
+def get_malually_model_data_paths(algorithm):
     model_path = filedialog.askopenfile(title = "Select the model .xml file for the " + algorithm + " algorithm", filetypes=(("Text Files", "*.xml"),))
     subjects_path = filedialog.askopenfile(title = "Select the subjects .csv file",     filetypes = [("Text files","*.csv")])
     parameters_path = filedialog.askopenfile(title = "Select the parameters .csv file", filetypes = [("Text files","*.csv")])

@@ -1,20 +1,75 @@
 # -*- coding: utf-8 -*-
-# pip3 install matplotlib
-# pip3 install numpy
-# pip3 install  opencv-contrib-python
 
 import numpy as np
+
+
+#new
+from supportmodule2 import *
+
+# pip3 install  opencv-contrib-python
 import cv2
-# import matplotlib as plot
-# import ipdb
-import os
+from tkinter import messagebox
+import tkinter
+
+class Camera:
+    
+    def __init__(self, name, camera = 0):
+        self.name = name
+        self.image = []
+        self.wait_key = cv2.CascadeClassifier(HAAR_CASCADE_FILE_PATH)
+        self.cam = cv2.VideoCapture(camera)
+        return None if not self.is_device_work(self.cam) else None
+        
+        return self
+
+
+    def is_device_work(self, cam):
+        if cam is None or not cam.isOpened(): 
+            return False
+        else:
+            return True
+
+
+    def get_frame(self):
+        while True:
+            try:
+                check, frame = self.webcam.read() # odczytaj okno
+                cv2.imshow("Capturing", frame) # wyświetl okno
+                key = cv2.waitKey(1) # obiekt przycisku, czekaj 1ms z oknem
+                if key == ord('s'):  # jeśli "s" to zapisz zdjęcie
+                    self.photo = frame
+                    cv2.imwrite(filename="images/image_object_" + str(id(self)) + '.jpg', img=frame)
+                    webcam.release()
+                    cv2.waitKey(1650)
+                    cv2.destroyAllWindows()
+                    print("Image saved!")
+                    break
+                elif key == ord('q'): # jeśli "q" to wyłącz kamerkę
+                    self.photo = None
+                    print("Turning off camera.")
+                    webcam.release()
+                    print("Camera off.")
+                    print("Program ended.")
+                    cv2.destroyAllWindows()
+                    break
+            except(KeyboardInterrupt): # jeśli ctrl+C albo coś innego również zakończ
+                self.photo = None
+                print("Turning off camera.")
+                webcam.release()
+                print("Camera off.")
+                print("Program ended.")
+                cv2.destroyAllWindows()
+                break
+        return self.photo
+
 
 class Face_detector:
+    
+    face_cascade = cv2.CascadeClassifier(HAAR_CASCADE_FILE_PATH)
 
     def __init__(self):
         self.photo = []
         self.face = []
-    face_cascade = cv2.CascadeClassifier('models/haarcascade_frontalface_default.xml')
 
     def get_photo(self):
         key = cv2.waitKey(1) # obiekt przycisku dla okna kamerki 1ms
