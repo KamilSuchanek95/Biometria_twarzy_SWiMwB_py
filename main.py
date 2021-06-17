@@ -110,22 +110,19 @@ class RecognitionApp:
         self.save_configuration_button = tki.Button(self.frame_training, text='Save configuration', relief='solid', command=self.confirmModel)
         self.save_configuration_button.grid(row=8, column=0, columnspan=3, sticky='nsew')
 
-        self.initialWork()
+        self.checkIfProgramIsReady()
 
 
-    def initialWork(self):
-        try:
-            with open(PROGRAM_STATE_FILE_PATH, 'r') as f: r = f.read(); [isSet, algorithm] = r.split(',')
-            if float(IsSet) < 1:
-                messagebox.showinfo('Init program',
-                                    'You must configure the program!\nGo to the face recognition configuration panel and train / load the model')
-            else:
-                self.alg_var.set(algorithm)
-                self.loadModelFirstTime()
-        except:
-            messagebox.showinfo('Init program',
-                                'You must configure the program!\nGo to the face recognition configuration panel and train / load the model')
-
+    def checkIfProgramIsReady(self):
+        with open(PROGRAM_STATE_FILE_PATH, 'r') as f: r = f.read(); [isSet, algorithm] = r.split(',')
+        if float(IsSet) < 1:
+            messagebox.showinfo('Start program',
+                                '''You must configure the program!
+                                Go to the face recognition configuration panel 
+                                and train / load the model''')
+        else:
+            self.alg_var.set(algorithm)
+            self.loadModelFirstTime(algorithm)
 
     def turnOnCamera(self):
         if self.off:
@@ -264,8 +261,8 @@ class RecognitionApp:
 
         print('koniec testow')
 
-    def loadModelFirstTime(self):
-        algorithm = str(self.alg_var.get())
+    def loadModelFirstTime(self, algorithm):
+        # algorithm = str(self.alg_var.get())
         model_paths = getModelDataFromResources(algorithm)
         loadModel(algorithm, model_paths)
 

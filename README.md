@@ -6,9 +6,9 @@ Klasyfikacja twarzy opiera się na algorytmach LBPH, Eigenface i Fisherface zaim
 
 Przechwytywanie obrazu z kamerki internetowej zostało wykonane na podstawie tego repozytorium: [Kevinam99-github](https://github.com/kevinam99/capturing-images-from-webcam-using-opencv-python)
 
-Trwa implementacja interfejsu graficznego przy pomocy Tkinter.
+14.06.2021, teraz muszę nprawić to spaghetti...
 
 # okno główne:
-![](/framev3.JPG)
+![](readme/framev3.JPG)
 # okno ustawień dla modelu rozpoznawania twarzy:
-![](/framev3_fac.JPG)
+![](readme/framev3_fac.JPG)
