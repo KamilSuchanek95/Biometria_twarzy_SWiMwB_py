@@ -213,7 +213,8 @@ and train / load the model''')
         entry_handle.insert(0, path)
 
     def create_identity_classes(self):
-        fr = open('models/' + str(self.recognizer.algorithm) + '_parameters.csv', 'r')
+        new_identity_classes_path = os.path.join(MODELS_FILES_PATH, str(self.recognizer.algorithm) + '_parameters.csv')
+        fr = open(new_identity_classes_path, 'r')
         if len(fr.readline().split(',')) < 3:
             fr.close()
             identityList = self.resulting_class_entry.get().split(',')
@@ -239,7 +240,8 @@ and train / load the model''')
 
     def test_model(self, path): # create name_parameters.csv file with {subject,mean p, identity} columns
         p = []
-        fw = open("models/" + self.recognizer.algorithm + "_parameters.csv", "w")
+        new_parameters_path = os.path.join(MODELS_FILES_PATH, self.recognizer.algorithm + "_parameters.csv")
+        fw = open(new_parameters_path, "w")
         for subject in os.listdir(path):
             #	if subject.startswith("."):
             #		continue;

@@ -1,7 +1,11 @@
 # pliki
 *.jpg
 *.jpeg
+*.gif
+*.png
 *.xml
+*.csv
+*json
 
 # dziwne foldery
 __pycache__/*

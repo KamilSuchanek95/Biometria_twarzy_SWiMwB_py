@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from supportmodule import MODELS_FILES_PATH
 import numpy as np
 
 
@@ -14,63 +13,63 @@ import cv2
 from tkinter import messagebox
 import tkinter
 
-# This Class is unused for now jet
-class Camera:
+# # This Class is unused for now jet
+# class Camera:
     
-    CORE_PATH   =   os.path.dirname(os.path.realpath(__file__)) # used below too
-    RESOURCES_PATH  = os.path.join(CORE_PATH, 'resources')
-    IMAGES_PATH = os.path.join(RESOURCES_PATH, 'images')
+#     CORE_PATH   =   os.path.dirname(os.path.realpath(__file__)) # used below too
+#     RESOURCES_PATH  = os.path.join(CORE_PATH, 'resources')
+#     IMAGES_PATH = os.path.join(RESOURCES_PATH, 'images')
 
-    def __init__(self, name, camera = 0):
-        self.name = name
-        self.image = []
-        self.cam = cv2.VideoCapture(camera)
-        return None if not self.is_device_work(self.cam) else None
+#     def __init__(self, name, camera = 0):
+#         self.name = name
+#         self.image = []
+#         self.cam = cv2.VideoCapture(camera)
+#         return None if not self.is_device_work(self.cam) else None
         
-        return self
+#         return self
 
-    def is_device_work(self, cam):
-        if cam is None or not cam.isOpened(): 
-            return False
-        else:
-            return True
+#     def is_device_work(self, cam):
+#         if cam is None or not cam.isOpened(): 
+#             return False
+#         else:
+#             return True
 
-    def end_frameing(self):
-        print("Turning off camera.")
-        self.cam.release()
-        print("Camera off.")
-        cv2.destroyAllWindows()
+#     def end_frameing(self):
+#         print("Turning off camera.")
+#         self.cam.release()
+#         print("Camera off.")
+#         cv2.destroyAllWindows()
 
-    def create_image_path(self):
-        return os.path.join(IMAGES_PATH, self.name + '_' + str(self.number_or_files_with_name(IMAGES_PATH) + 1) + '.jpg')
+#     def create_image_path(self):
+#         return os.path.join(Camera.IMAGES_PATH, self.name + '_' + str(self.number_or_files_with_name(Camera.IMAGES_PATH) + 1) + '.jpg')
 
-    def number_or_files_with_name(self, dir):
-        # return len(next(os.walk(dir))[2])
-        return len(glob.glob(dir,"*{self.name}_*.jpg"))
+#     def number_or_files_with_name(self, dir):
+#         # return len(next(os.walk(dir))[2])
+#         return len(glob.glob(dir,"*{self.name}_*.jpg"))
 
-    def get_image(self):
-        return None if not self.is_device_work(self.cam) else None
-        while True:
-            try:
-                check, frame = self.cam.read() # odczytaj okno
-                cv2.imshow("Capturing", frame) # wyświetl okno
-                key = cv2.waitKey(1) # obiekt przycisku, czekaj 1ms z oknem
-                if key == ord('s'):  # jeśli "s" to zapisz zdjęcie
-                    self.image = frame
-                    cv2.imwrite(filename=self.create_image_path(self.name), img=frame)
-                    self.end_frameing()
-                    # cv2.waitKey(1650)
-                    print("Image saved!")
-                    break
-                elif key == ord('q'): # jeśli "q" to wyłącz kamerkę
-                    self.image = None
-                    self.end_frameing()
-                    break
-            except(KeyboardInterrupt): # jeśli ctrl+C albo coś innego również zakończ
-                self.image = None
-                self.end_frameing()
-                break
-        return self.image
+#     def get_image(self):
+#         return None if not self.is_device_work(self.cam) else None
+#         while True:
+#             try:
+#                 check, frame = self.cam.read() # odczytaj okno
+#                 cv2.imshow("Capturing", frame) # wyświetl okno
+#                 key = cv2.waitKey(1) # obiekt przycisku, czekaj 1ms z oknem
+#                 if key == ord('s'):  # jeśli "s" to zapisz zdjęcie
+#                     self.image = frame
+#                     cv2.imwrite(filename=self.create_image_path(self.name), img=frame)
+#                     self.end_frameing()
+#                     # cv2.waitKey(1650)
+#                     print("Image saved!")
+#                     break
+#                 elif key == ord('q'): # jeśli "q" to wyłącz kamerkę
+#                     self.image = None
+#                     self.end_frameing()
+#                     break
+#             except(KeyboardInterrupt): # jeśli ctrl+C albo coś innego również zakończ
+#                 self.image = None
+#                 self.end_frameing()
+#                 break
+#         return self.image
 
 
 class Face_detector:
@@ -85,9 +84,11 @@ class Face_detector:
         self.face = []
 
     def detect_face(self, image):
-        return None if image is None else None
+        #return None if image is None else None
+        if image is None:
+            return None
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=4)
+        faces = self.cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=4)
         # jesli nie wykryto twarzy zwroc None
         if (len(faces) == 0):
             return None
@@ -113,8 +114,10 @@ class Face_recognitor():
         self.subjects = []
 
     def roi_must_be_square(self, algorithm):
-        return False if algorithm != 'lbph' else None
-        return True
+        if algorithm != 'lbph':
+            return False
+        else:
+            return True
 
     def select_recognizer(self, algorithm):
         switcher = {
@@ -129,7 +132,7 @@ class Face_recognitor():
         for l in lines:
             self.subjects = l.split(',')[0:-1]
 
-    def create_subjects_path(self, subjects, models_path = MODELS_FILES_PATH):
+    def create_subjects_file(self, subjects, models_path = MODELS_FILES_PATH):
         with open(os.path.join(models_path, self.algorithm + '_subjects.csv'), "w") as file:
             for n in subjects:
                 file.write(n)
@@ -147,6 +150,7 @@ class Face_recognitor():
         # Warto po przeszkoleniu modelu, wygenerować "typowe" wartosci niepewnosci dla predykcji obrazow testowych, aby
         # potem sugerowac sie nimi w celu stwierdzenia, czy niepewnosc jest dosc mala aby wskazanie konkretnej tozsamosci
         # bylo wiarygodne.
+        licznik = 0
         dirs = os.listdir(training_data_folder_path)
         self.subjects = dirs
         faces, labels, label = [], [], -1 
@@ -173,10 +177,16 @@ class Face_recognitor():
                 face = self.face_detector.detect_face(image)
                 # jeśli w istocie ją wykryto, dodawanie do listy twarzy oraz jej identyfikatora
                 if face is not None:
-                    if self.roi_must_be_square():
+                    licznik +=1
+                    print( str(licznik) + ' Tak ' + image_name)
+                    if self.roi_must_be_square(self.algorithm):
                         face = cv2.resize(face, (256, 256))
                     faces.append(face)
                     labels.append(label)
+                else:
+                    licznik +=1
+                    print(str(licznik) + ' Nie '+image_name)
+                    None
         # zwroc twarze z identyfikatorami
         return faces, labels, self.subjects
 
@@ -198,7 +208,7 @@ class Face_recognitor():
         face = self.face_detector.detect_face(image)  # wykrywanie twarzy
         if face is None:
             return None, None, None
-        if self.roi_must_be_square():
+        if self.roi_must_be_square(self.algorithm):
             face = cv2.resize(face, (256, 256))
         label, how_much = self.face_recognizer.predict(face)  # rozpoznawanie
         label_text = self.subjects[label]  # odszukanie tozsamosci po identyfikatorze
