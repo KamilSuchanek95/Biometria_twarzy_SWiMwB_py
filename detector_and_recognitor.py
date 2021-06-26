@@ -128,9 +128,8 @@ class Face_recognitor():
         return switcher.get(algorithm, 'Invalid algorithm name.')
      
     def load_subjects(self, subjects_path):
-        with open(subjects_path, "r") as f: lines = f.readlines
-        for l in lines:
-            self.subjects = l.split(',')[0:-1]
+        with open(subjects_path, "r") as f: line = f.readlines()[0]
+        self.subjects = line.split(',')[0:-1]
 
     def create_subjects_file(self, subjects, models_path = MODELS_FILES_PATH):
         with open(os.path.join(models_path, self.algorithm + '_subjects.csv'), "w") as file:

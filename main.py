@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 #new
-from tkinter.filedialog import LoadFileDialog
-from supportmodule import *
+
+from gui_helper import *
 
 import detector_and_recognitor as s
 import tkinter as tki
@@ -11,7 +11,6 @@ from functools import partial
 import cv2
 import datetime
 from PIL import Image, ImageTk
-import numpy as np
 import ipdb as i
 
 class RecognitionApp:
@@ -22,7 +21,9 @@ class RecognitionApp:
         self.recognizer = s.Face_recognitor()
         self.subjects= []
         self.identities = {}
-        self.p_vals = {}
+        self.eukli_distances = {}
+
+
         self.toggle_camera = 1
         self.webcam = cv2.VideoCapture(0)
         self.off = 0
@@ -184,19 +185,19 @@ and train / load the model''')
         if img is None:
             messagebox.showinfo('Recognition imformation', 'No face detected!')
         else:
-            if self.identity_entry.get() == self.identities[subject] and self.p_vals[subject] >= p_val: # z wymaganą dokładnością...
+            if self.identity_entry.get() == self.identities[subject] and self.eukli_distances[subject] >= p_val: # z wymaganą dokładnością...
                     messagebox.showinfo('Recognition result','You are really ' + self.identities[subject] + '.\nAcces allowed.')
-            elif self.p_vals[subject] >= p_val:
+            elif self.eukli_distances[subject] >= p_val:
                 messagebox.showinfo('Recognition result', 'You are not ' + self.identity_entry.get() + ",\n  But you have been recognized as " + self.identities[subject] + ".\n Access denied.")
                 print('p_val:\t\t' + str(p_val) + '\n' +
-                      'self.p+val:\t\t' + str(self.p_vals[subject]) + '\n' +
+                      'self.p+val:\t\t' + str(self.eukli_distances[subject]) + '\n' +
                       'entry.ID:\t\t' + self.identity_entry.get() + '\n' +
                       'subject:\t\t' + subject + '\n' +
                       'self.ID:\t\t' + self.identities[subject])
             else:
                 messagebox.showinfo('Recognition result','Not recognized approved person\n')
                 print('p_val:\t\t' + str(p_val) + '\n' +
-                      'self.p+val:\t\t' + str(self.p_vals[subject]) + '\n' +
+                      'self.p+val:\t\t' + str(self.eukli_distances[subject]) + '\n' +
                       'entry.ID:\t\t' + self.identity_entry.get() + '\n' +
                       'subject:\t\t' + subject + '\n' +
                       'self.ID:\t\t' + self.identities[subject])
@@ -213,8 +214,9 @@ and train / load the model''')
         entry_handle.insert(0, path)
 
     def create_identity_classes(self):
-        new_identity_classes_path = os.path.join(MODELS_FILES_PATH, str(self.recognizer.algorithm) + '_parameters.csv')
-        fr = open(new_identity_classes_path, 'r')
+        model_paths = get_model_data_paths_for_algorithm(str(self.recognizer.algorithm))
+        parameters_path = model_paths[1]
+        fr = open(parameters_path, 'r')
         if len(fr.readline().split(',')) < 3:
             fr.close()
             identityList = self.resulting_class_entry.get().split(',')
@@ -223,13 +225,13 @@ and train / load the model''')
                 if len(self.identities) < 1:
                     self.resulting_class_entry.insert(0, 'You must first train or load a model1!')
                 else:
-                    fr = open('models/' + str(self.recognizer.algorithm) + '_parameters.csv', 'r')
+                    fr = open(parameters_path, 'r')
                     lines = fr.readlines()
                     fr.close()
                     if len(lines)==len(self.subjects):
                         for idx, el in enumerate(lines):
                             lines[idx] = lines[idx][0:-1] + ',' + self.identities[self.subjects[idx]]
-                        fw = open('models/' + self.recognizer.algorithm + '_parameters.csv', 'w')
+                        fw = open(parameters_path, 'w')
                         for el in lines:
                             fw.write(el + '\n')
                         fw.close()
@@ -238,63 +240,59 @@ and train / load the model''')
             else:
                 messagebox.showinfo('Error entered Ids list','Lengths of IDs list and subjects is not equal')
 
-    def test_model(self, path): # create name_parameters.csv file with {subject,mean p, identity} columns
-        p = []
-        new_parameters_path = os.path.join(MODELS_FILES_PATH, self.recognizer.algorithm + "_parameters.csv")
-        fw = open(new_parameters_path, "w")
-        for subject in os.listdir(path):
-            #	if subject.startswith("."):
-            #		continue;
-            oo = os.listdir(path + '/' + subject)
-            for t in oo:
-                test_img = cv2.imread(path + '/' + subject + "/" + t)
-                if self.recognizer.algorithm == 'lbph':
-                    predicted_img, how_much, who = self.recognizer.predict(test_img)
-                else:
-                    predicted_img, how_much, who = self.recognizer.predict(test_img)
-                if predicted_img is None:
+    def test_model(self, test_images_path): # create name_parameters.csv file with {subject,mean p, identity} columns
+        parameters_path = get_model_data_paths_for_algorithm(self.recognizer.algorithm)[1]
+        fw = open(parameters_path, "w")
+        for subject in os.listdir(test_images_path):
+            eukli_distances = []
+            subject_images_path = os.path.join(test_images_path, subject)
+            for image in os.listdir(subject_images_path):
+                image_path = os.path.join(subject_images_path, image)
+                test_img = cv2.imread(image_path)
+                predicted_img, eukli_distance, who = self.recognizer.predict(test_img)
+                if predicted_img is None: #if recognize nothing
                     continue
-                if who == subject:
-                    p.append(how_much)
-            if len(p) > 0:
-                fw.write(subject + ',' + str(np.max(p)) + '\n')
-                self.p_vals.update({subject: np.max(p)})
+                if who == subject: # if recognize correctly
+                    eukli_distances.append(eukli_distance)
+            if len(eukli_distances) > 0:
+                fw.write(subject + ',' + str(max(eukli_distances)) + '\n')
+                self.eukli_distances.update({subject: max(eukli_distances)})
             else:
                 fw.write(subject + ',' + 0 + '\n')
-                self.p_vals.update({subject: 0})
-            p = []
+                self.eukli_distances.update({subject: 0})
         fw.close()
+        print('End of testing model')
 
-        print('koniec testow')
-
-    def set_pvals_and_identities(self, parameters_path):
+    def set_eukli_distances_and_identities(self, parameters_path):
         with open(parameters_path, 'r') as f: lines = f.readlines()
-        for l in lines:
-            list = l.split(',')
-            self.p_vals.update({l[0]: float(l[1].strip())})
-            self.identities.update({l[0]: l[2].strip()})
+        for line in lines:
+            params = line.split(',')
+            self.eukli_distances.update({params[0]: float(params[1].strip())})
+            self.identities.update({params[0]: params[2].strip()})
+            # in one line we have: "subject, eukli_distance, identitie"
 
     def update_subjects_text_entry(self, subjects_path):
-        with open(subjects_path, "r") as f: lines = f.readlines
-        for l in lines:
-            self.subjects = l.split(',')[0:-1]
-            self.resulting_class_entry.delete(0, tki.END)
-            self.resulting_class_entry.insert(0, ','.join(self.subjects))
+        self.recognizer.load_subjects(subjects_path)
+        # with open(subjects_path, "r") as f: line = f.readlines()[0]
+        # self.subjects = line.split(',')[0:-1] # po co dosłowne indeksy? to niby ucina przecinek.
+        self.subjects = self.recognizer.subjects # trzeba to wywalic!!
+        self.resulting_class_entry.delete(0, tki.END)
+        self.resulting_class_entry.insert(0, ','.join(self.subjects))
 
     def load_model(self, algorithm, model_paths):
-        [model_path, parameters_path, subjects_path] = model_paths
+        model_path, parameters_path, subjects_path = model_paths
         self.update_subjects_text_entry(subjects_path)
-        self.set_pvals_and_identities(parameters_path)
+        self.set_eukli_distances_and_identities(parameters_path)
         try:
             self.recognizer = s.Face_recognitor(algorithm)
-            self.recognizer.read_model(model_path = model_path, subjects_path = subjects_path)
+            self.recognizer.read_model(model_path, subjects_path)
             messagebox.showinfo('Load successful', 'Model was loaded!')
         except:
             messagebox.showinfo('Load unsuccessful', 'Wrong selected files')
     
     def load_model_first_time(self, algorithm):
         # algorithm = str(self.alg_var.get())
-        model_paths = get_model_data_from_resources(algorithm)
+        model_paths = get_model_data_paths_for_algorithm(algorithm)
         self.load_model(algorithm, model_paths)
 
     def manually_load_model(self):
@@ -319,8 +317,8 @@ and train / load the model''')
         print(self.alg_var.get())
 
     def confirm_model(self):
-        messagebox.showinfo('Complete the face recognition configuration','The configuration has been saved, do not manipulate files inside the "Recognition Systems" and "models" folders.')
-        with open('Recognition Systems/set.txt', 'w') as file:
+        messagebox.showinfo('Complete the face recognition configuration','The configuration has been saved, do not manipulate files inside resources folder.')
+        with open(PROGRAM_STATE_FILE_PATH, 'w') as file:
             file.write('1,' + str(self.alg_var.get()))
 
 
