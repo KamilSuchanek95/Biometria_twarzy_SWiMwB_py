@@ -12,7 +12,7 @@ from tkinter import filedialog
 #        - models (folder for trained in application models .xml)
 #        - program (folder maybe for another script files)
 #        - program_state (folder for set.txt file includes initial state of program)
-CORE_PATH           = os.path.dirname(os.path.realpath(__file__)) # used below too
+CORE_PATH           = os.path.normpath( os.path.join( os.path.dirname(os.path.realpath(__file__)), os.path.pardir, os.path.pardir ) )
 RESOURCES_PATH      = os.path.join(CORE_PATH, 'resources')
 DEFAULT_PATH        = os.path.join(RESOURCES_PATH, 'default')
 IMAGES_PATH         = os.path.join(RESOURCES_PATH, 'images')

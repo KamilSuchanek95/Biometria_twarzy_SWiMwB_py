@@ -6,60 +6,6 @@ import os
 import glob
 import numpy
 
-# # This Class is unused for now jet
-# class Camera:
-
-#     def __init__(self, name, camera = 0):
-#         self.name = name
-#         self.image = []
-#         self.cam = cv2.VideoCapture(camera)
-#         return None if not self.is_device_work(self.cam) else None
-        
-#         return self
-
-#     def is_device_work(self, cam):
-#         if cam is None or not cam.isOpened(): 
-#             return False
-#         else:
-#             return True
-
-#     def end_frameing(self):
-#         print("Turning off camera.")
-#         self.cam.release()
-#         print("Camera off.")
-#         cv2.destroyAllWindows()
-
-#     def create_image_path(self):
-#         return os.path.join(Camera.IMAGES_PATH, self.name + '_' + str(self.number_or_files_with_name(Camera.IMAGES_PATH) + 1) + '.jpg')
-
-#     def number_or_files_with_name(self, dir):
-#         # return len(next(os.walk(dir))[2])
-#         return len(glob.glob(dir,"*{self.name}_*.jpg"))
-
-#     def get_image(self):
-#         return None if not self.is_device_work(self.cam) else None
-#         while True:
-#             try:
-#                 check, frame = self.cam.read() # odczytaj okno
-#                 cv2.imshow("Capturing", frame) # wyświetl okno
-#                 key = cv2.waitKey(1) # obiekt przycisku, czekaj 1ms z oknem
-#                 if key == ord('s'):  # jeśli "s" to zapisz zdjęcie
-#                     self.image = frame
-#                     cv2.imwrite(filename=self.create_image_path(self.name), img=frame)
-#                     self.end_frameing()
-#                     # cv2.waitKey(1650)
-#                     print("Image saved!")
-#                     break
-#                 elif key == ord('q'): # jeśli "q" to wyłącz kamerkę
-#                     self.image = None
-#                     self.end_frameing()
-#                     break
-#             except(KeyboardInterrupt): # jeśli ctrl+C albo coś innego również zakończ
-#                 self.image = None
-#                 self.end_frameing()
-#                 break
-#         return self.image
-
 
 class Face_detector:
 
@@ -164,3 +110,59 @@ class Face_recognitor():
         label, how_much = self.face_recognizer.predict(face)
         label_text = self.subjects[label]
         return image, how_much, label_text
+
+
+
+# # This Class is unused for now jet
+# class Camera:
+
+#     def __init__(self, name, camera = 0):
+#         self.name = name
+#         self.image = []
+#         self.cam = cv2.VideoCapture(camera)
+#         return None if not self.is_device_work(self.cam) else None
+        
+#         return self
+
+#     def is_device_work(self, cam):
+#         if cam is None or not cam.isOpened(): 
+#             return False
+#         else:
+#             return True
+
+#     def end_frameing(self):
+#         print("Turning off camera.")
+#         self.cam.release()
+#         print("Camera off.")
+#         cv2.destroyAllWindows()
+
+#     def create_image_path(self):
+#         return os.path.join(Camera.IMAGES_PATH, self.name + '_' + str(self.number_or_files_with_name(Camera.IMAGES_PATH) + 1) + '.jpg')
+
+#     def number_or_files_with_name(self, dir):
+#         # return len(next(os.walk(dir))[2])
+#         return len(glob.glob(dir,"*{self.name}_*.jpg"))
+
+#     def get_image(self):
+#         return None if not self.is_device_work(self.cam) else None
+#         while True:
+#             try:
+#                 check, frame = self.cam.read() # odczytaj okno
+#                 cv2.imshow("Capturing", frame) # wyświetl okno
+#                 key = cv2.waitKey(1) # obiekt przycisku, czekaj 1ms z oknem
+#                 if key == ord('s'):  # jeśli "s" to zapisz zdjęcie
+#                     self.image = frame
+#                     cv2.imwrite(filename=self.create_image_path(self.name), img=frame)
+#                     self.end_frameing()
+#                     # cv2.waitKey(1650)
+#                     print("Image saved!")
+#                     break
+#                 elif key == ord('q'): # jeśli "q" to wyłącz kamerkę
+#                     self.image = None
+#                     self.end_frameing()
+#                     break
+#             except(KeyboardInterrupt): # jeśli ctrl+C albo coś innego również zakończ
+#                 self.image = None
+#                 self.end_frameing()
+#                 break
+#         return self.image

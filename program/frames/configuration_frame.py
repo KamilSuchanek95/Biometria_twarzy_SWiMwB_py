@@ -1,6 +1,6 @@
 
-from gui_helper import *
-from detector_and_recognitor import *
+from program.helper.gui_helper import *
+from program.tools.detector_and_recognitor import *
 
 import cv2
 from functools import partial

@@ -1,5 +1,5 @@
 
-from gui_helper import *
+from program.helper.gui_helper import *
 
 import cv2
 from PIL import Image, ImageTk

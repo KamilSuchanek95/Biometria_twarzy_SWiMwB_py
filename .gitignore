@@ -16,3 +16,4 @@ venv/*
 !resources/default/DefaultImage.jpg
 !resources/models/haarcascade_frontalface_default.xml
 
+program/__pycache__/*

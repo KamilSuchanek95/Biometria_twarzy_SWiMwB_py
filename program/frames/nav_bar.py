@@ -1,4 +1,3 @@
-
 import tkinter as tki
 from functools import partial
 
