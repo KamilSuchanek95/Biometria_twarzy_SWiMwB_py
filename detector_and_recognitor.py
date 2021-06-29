@@ -114,7 +114,7 @@ class Face_recognitor():
         self.subjects = []
 
     def roi_must_be_square(self, algorithm):
-        if algorithm != 'lbph':
+        if algorithm == 'lbph':
             return False
         else:
             return True
