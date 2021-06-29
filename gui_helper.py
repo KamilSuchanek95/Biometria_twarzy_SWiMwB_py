@@ -1,6 +1,8 @@
 # module for help organize GUI code and PATHS
 
 import os
+
+# Tkinter
 from tkinter import filedialog
 
 # Paths used by GUI
@@ -31,7 +33,9 @@ FISHERFACE_PARAMETERS_PATH  = os.path.join(MODELS_FILES_PATH, 'fisherface_parame
 EIGENFACE_PARAMETERS_PATH   = os.path.join(MODELS_FILES_PATH, 'eigenface_parameters.csv')
 LBPH_PARAMETERS_PATH        = os.path.join(MODELS_FILES_PATH, 'lbph_parameters.csv')
 
-
+INSTRUCTION_CLASSES_LABEL = '''Replace the class names "s0, s1, ..." with real identity names by selecting the folder name, e.g. "s0" and entering "Adam Kowalski" instead, without removing a commas, each identity name must be exactly on the position of the folder name being replaced. 
+So, having a list: "s0, s1, s10", assuming that s0 is assigned to the identity "Adam Kowalski", s1 to "Marta Brzdż" and s10 to "Lucyna Puf", then the text "s0, s1, s10" must be replaced by "Adam Kowalski, Marta Brzdż, Lucyna Puf" :'''
+INFO_MUST_CONFIGURE = '''You must configure the program! Go to the face recognition configuration panel and train / load the model'''
 
 # Resources objects
 # from PIL import Image, ImageTk
