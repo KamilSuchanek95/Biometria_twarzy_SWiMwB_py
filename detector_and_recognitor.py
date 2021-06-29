@@ -1,24 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
-
-
-#new
-import os
-import glob
-
-
 # pip3 install  opencv-contrib-python
 import cv2
-from tkinter import messagebox
-import tkinter
+import os
+import glob
+import numpy
 
 # # This Class is unused for now jet
 # class Camera:
-    
-#     CORE_PATH   =   os.path.dirname(os.path.realpath(__file__)) # used below too
-#     RESOURCES_PATH  = os.path.join(CORE_PATH, 'resources')
-#     IMAGES_PATH = os.path.join(RESOURCES_PATH, 'images')
 
 #     def __init__(self, name, camera = 0):
 #         self.name = name
@@ -73,44 +62,40 @@ import tkinter
 
 
 class Face_detector:
-    CORE_PATH   =   os.path.dirname(os.path.realpath(__file__))
-    RESOURCES_PATH  = os.path.join(CORE_PATH, 'resources')
-    MODELS_FILES_PATH   = os.path.join(RESOURCES_PATH, 'models')
-    HAAR_CASCADE_FILE_PATH  = os.path.join(MODELS_FILES_PATH, 'haarcascade_frontalface_default.xml')
-    def __init__(self, classifier_path = HAAR_CASCADE_FILE_PATH):
-        self.cascade = cv2.CascadeClassifier(classifier_path)
-        # TODO: check if clasiffier file exists
+
+    def __init__(self, classifier_path):
+        if os.path.exists(classifier_path):
+            self.cascade = cv2.CascadeClassifier(classifier_path)
+        else:
+            self.cascade = None
         self.photo = []
         self.face = []
 
-    def detect_face(self, image):
+
+    def detect_face(self, image, scale_factor = 1.05, min_neighbors = 4):
         #return None if image is None else None
         if image is None:
             return None
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        faces = self.cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=4)
-        # jesli nie wykryto twarzy zwroc None
+        faces = self.cascade.detectMultiScale(gray, scaleFactor=scale_factor, minNeighbors=min_neighbors)
         if (len(faces) == 0):
             return None
-        # koordynaty ROI (najszerszego)
-        tr = np.transpose(faces)[2]
-        max_width_roi_idx, = np.where(np.max(tr) == tr)
-        (x, y, w, h) = faces[max_width_roi_idx[0]]
-        # zwroc ROI w skali szarości oraz koordynaty
+        return self.choose_the_widest_frame(faces, gray)
+
+    def choose_the_widest_frame(self, faces, gray):
+        widths = faces.transpose()[2] # [[x,y,w,h],[x,y,w,h]...] => [[x,x...],[y,y...],[w,w...],[h,h...]] => arr[2] => [w,w...]
+        index_of_max_width = widths.argmax()
+        x, y, w, h = faces[index_of_max_width]
         self.face = gray[y: y + w, x: x + h]
         return self.face
 
 
 class Face_recognitor():
-    CORE_PATH   =   os.path.dirname(os.path.realpath(__file__))
-    RESOURCES_PATH  = os.path.join(CORE_PATH, 'resources')
-    MODELS_FILES_PATH   = os.path.join(RESOURCES_PATH, 'models')
-    TRAINING_DATA_FOLDER_PATH = os.path.join(RESOURCES_PATH, 'training_images')
 
-    def __init__(self, algorithm = 'lbph'):
+    def __init__(self, face_detector, algorithm = 'lbph'):
         self.algorithm = algorithm.lower()
         self.face_recognizer = self.select_recognizer(self.algorithm)
-        self.face_detector = Face_detector()
+        self.face_detector = face_detector
         self.subjects = []
 
     def roi_must_be_square(self, algorithm):
@@ -131,9 +116,9 @@ class Face_recognitor():
         with open(subjects_path, "r") as f: line = f.readlines()[0]
         self.subjects = line.split(',')[0:-1]
 
-    def create_subjects_file(self, subjects, models_path = MODELS_FILES_PATH):
+    def create_subjects_file(self, models_path):
         with open(os.path.join(models_path, self.algorithm + '_subjects.csv'), "w") as file:
-            for n in subjects:
+            for n in self.subjects:
                 file.write(n)
                 file.write(',')
 
@@ -141,74 +126,41 @@ class Face_recognitor():
         self.face_recognizer.read(model_path)
         self.load_subjects(subjects_path)
 
-    # przygotowanie wykrytych twarzy do uczenia modelu
-    def prepare_training_data(self, training_data_folder_path = TRAINING_DATA_FOLDER_PATH):
-        # w naszym folderze training_images beda foldery s0 s1 s2 s3 dla kazdej osoby ktora chcemy rozpoznawac,
-        # oraz dla nieznanych, ktorych mozna zdefiniowac jako "typowe" nieznane twarze z bardzo malym zbiorem uczacym.
-        # ewentualne wykluczenie "nieznanych" mozna tez oprzec o zbyt duza niepewnosc zwracana jako "how_much".
-        # Warto po przeszkoleniu modelu, wygenerować "typowe" wartosci niepewnosci dla predykcji obrazow testowych, aby
-        # potem sugerowac sie nimi w celu stwierdzenia, czy niepewnosc jest dosc mala aby wskazanie konkretnej tozsamosci
-        # bylo wiarygodne.
-        licznik = 0
-        dirs = os.listdir(training_data_folder_path)
-        self.subjects = dirs
+    def prepare_training_data(self, training_data_folder_path):
+        dirs = glob.glob(os.path.join(training_data_folder_path, '*'))
+        self.subjects = [os.path.basename(dir) for dir in dirs]
         faces, labels, label = [], [], -1 
         for dir_name in dirs:
-            # zakladamy, ze kazdy folder ma w nazwie tylko jedna litere 's' a po niej numer zatwierdzanej tozsamosci,
-            # zastepujemy 's' => '' i uzyskujemy identyfikator tozsamosci.
-            #label = int(dir_name.replace("s", ""))
-            label = label + 1
-            # skladanie sciezki do pliku ./training_images/s0 ...
+            label += 1
             subject_dir_path = os.path.join(training_data_folder_path, dir_name)
-            # odczytujemy liste zdjec w lokacji wskazanej w linii wyzej
-            subject_images_names = os.listdir(subject_dir_path)
-            # petla po obrazach w celu detekcji twarzy, w przypadku jej wykrycia, dodanie owej do listy wykrytych, owa lista
-            # posluzy do nauki modelu
+            subject_images_dirs = glob.glob(os.path.join(subject_dir_path, '*'))
+            subject_images_names = [os.path.basename(dir) for dir in subject_images_dirs]
             for image_name in subject_images_names:
-                # ignorujemy pliki systemowe '.' '..'
-                if image_name.startswith("."):
-                    continue
-                # skladamy sciezke do zdjecia z nazwa owego
                 image_path = os.path.join(subject_dir_path, image_name)
-                # wczytanie owego do zmiennej
                 image = cv2.imread(image_path)
-                # wykrycie twarzy
                 face = self.face_detector.detect_face(image)
-                # jeśli w istocie ją wykryto, dodawanie do listy twarzy oraz jej identyfikatora
                 if face is not None:
-                    licznik +=1
-                    print( str(licznik) + ' Tak ' + image_name)
                     if self.roi_must_be_square(self.algorithm):
                         face = cv2.resize(face, (256, 256))
                     faces.append(face)
                     labels.append(label)
                 else:
-                    licznik +=1
-                    print(str(licznik) + ' Nie '+image_name)
                     None
-        # zwroc twarze z identyfikatorami
-        return faces, labels, self.subjects
+        return faces, labels
 
 
-    def train_model(self, training_data_folder_path = TRAINING_DATA_FOLDER_PATH, models_path = MODELS_FILES_PATH):
-        faces, labels, subjects = self.prepare_training_data(training_data_folder_path)
-        self.face_recognizer.train(faces, np.array(labels))
+    def train_model(self, training_data_folder_path, models_path):
+        faces, labels = self.prepare_training_data(training_data_folder_path)
+        self.face_recognizer.train(faces, numpy.array(labels))
         self.face_recognizer.save(os.path.join(models_path, self.algorithm + '_model' + '.xml'))
-        self.create_subjects_file(subjects, models_path)
+        self.create_subjects_file(models_path)
 
-    # rozpoznawanie osoby na zdjeciu i podpisywanie
     def predict(self, image):
-        #img = test_img.copy() # kopia obrazu
-        # face = self.face_detector.detect_face(img) # wykrywanie twarzy
-        #label, how_much = self.face_recognizer.predict(img) # rozpoznawanie
-        #label_text = self.subjects[label] # odszukanie tozsamosci po identyfikatorze
-        #return how_much, label_text # zwroc odpisany obraz, niepewnosc oraz tozsamosc
-        # img = image.copy()  # kopia obrazu
-        face = self.face_detector.detect_face(image)  # wykrywanie twarzy
+        face = self.face_detector.detect_face(image) 
         if face is None:
             return None, None, None
         if self.roi_must_be_square(self.algorithm):
             face = cv2.resize(face, (256, 256))
-        label, how_much = self.face_recognizer.predict(face)  # rozpoznawanie
-        label_text = self.subjects[label]  # odszukanie tozsamosci po identyfikatorze
-        return image, how_much, label_text  # zwróć podpisany obraz, niepewnosc oraz tozsamosc
+        label, how_much = self.face_recognizer.predict(face)
+        label_text = self.subjects[label]
+        return image, how_much, label_text

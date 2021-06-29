@@ -31,9 +31,7 @@ class RecognitionApp(tki.Tk):
         
         self.show_frame(0)
         
-        # globals
-        self.detector = Face_detector()
-        self.recognizer = Face_recognitor()
+        self.recognizer = None
         self.identities = {}
         self.eukli_distances = {}
 

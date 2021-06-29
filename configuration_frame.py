@@ -7,8 +7,6 @@ from functools import partial
 import tkinter as tki
 from tkinter import messagebox
 
-
-
 class ConfigurationFrame(tki.Frame):
 
 
@@ -75,7 +73,7 @@ class ConfigurationFrame(tki.Frame):
 
 
     def create_identity_classes(self):
-        parameters_path = get_model_data_paths_for_algorithm(str(self.controller.recognizer.algorithm))[1]
+        parameters_path = get_model_data_paths_for_algorithm(self.controller.recognizer.algorithm)[1]
         with open(parameters_path, 'r') as f: columns_number = len(f.readline().split(','))
         if columns_number < 3: # dopisz trzecią kolumnę, jeśli jej nie ma.
             identityList = self.resulting_class_entry.get().split(',')
@@ -114,7 +112,7 @@ class ConfigurationFrame(tki.Frame):
                 fw.write(subject + ',' + str(max(eukli_distances)) + '\n')
                 self.controller.eukli_distances.update({subject: max(eukli_distances)})
             else:
-                fw.write(subject + ',' + 0 + '\n')
+                fw.write(subject + ',' + '0' + '\n')
                 self.controller.eukli_distances.update({subject: 0})
         fw.close()
         print('End of testing model')
@@ -127,7 +125,7 @@ class ConfigurationFrame(tki.Frame):
             params = line.split(',')
             self.controller.eukli_distances.update({params[0]: float(params[1].strip())})
             self.controller.identities.update({params[0]: params[2].strip()})
-            # in one line we have: "subject, eukli_distance, identitie"
+            # in one line we have: "subject, eukli_distance, identity"
 
     def update_subjects_text_entry(self, subjects_path):
         self.controller.recognizer.load_subjects(subjects_path)
@@ -137,34 +135,32 @@ class ConfigurationFrame(tki.Frame):
     def load_model(self, algorithm, model_paths):
         try:
             model_path, parameters_path, subjects_path = model_paths
+            detector = Face_detector(CLASSIFIER_FILE_PATH)
+            self.controller.recognizer = Face_recognitor(detector, algorithm)
             self.update_subjects_text_entry(subjects_path)
             self.set_eukli_distances_and_identities(parameters_path)
-            self.controller.recognizer = Face_recognitor(algorithm)
             self.controller.recognizer.read_model(model_path, subjects_path)
             messagebox.showinfo('Load successful', 'Model was loaded!')
         except:
             messagebox.showinfo('Load unsuccessful', 'Wrong selected files')
     
     def load_model_first_time(self, algorithm):
-        # algorithm = str(self.alg_var.get())
         model_paths = get_model_data_paths_for_algorithm(algorithm)
         self.load_model(algorithm, model_paths)
 
     def manually_load_model(self):
-        algorithm = str(self.alg_var.get())
+        algorithm = self.alg_var.get()
         model_paths = get_malually_model_data_paths(algorithm)
         self.load_model(algorithm, model_paths)
     
     def create_model(self):
-        # create model object
-        self.controller.recognizer = Face_recognitor(self.alg_var.get())
-        # train it
-        self.controller.recognizer.train_model(self.training_path_entry.get())
-        # set subjects
-        # entry classes
+        detector = Face_detector(CLASSIFIER_FILE_PATH)
+        self.controller.recognizer = Face_recognitor(detector, self.alg_var.get())
+        self.controller.recognizer.train_model(self.training_path_entry.get(), MODELS_FILES_PATH)
+
         self.resulting_class_entry.delete(0, tki.END)
         self.resulting_class_entry.insert(0, ','.join(self.controller.recognizer.subjects))
-        # test model
+
         self.test_model(self.testing_path_entry.get())
 
     def radio_checked(self): # unnecessary
@@ -173,4 +169,4 @@ class ConfigurationFrame(tki.Frame):
     def confirm_model(self):
         messagebox.showinfo('Complete the face recognition configuration','The configuration has been saved, do not manipulate files inside resources folder.')
         with open(PROGRAM_STATE_FILE_PATH, 'w') as file:
-            file.write('1,' + str(self.alg_var.get()))
+            file.write('1,' + self.alg_var.get())

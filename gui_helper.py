@@ -1,8 +1,6 @@
 # module for help organize GUI code and PATHS
 
 import os
-
-# Tkinter
 from tkinter import filedialog
 
 # Paths used by GUI
@@ -21,8 +19,9 @@ IMAGES_PATH         = os.path.join(RESOURCES_PATH, 'images')
 MODELS_FILES_PATH   = os.path.join(RESOURCES_PATH, 'models')
 PROGRAM_STATE_FOLDER_PATH   = os.path.join(RESOURCES_PATH, 'program_state')
 
-PROGRAM_STATE_FILE_PATH         = os.path.join(PROGRAM_STATE_FOLDER_PATH, 'set.txt')
+PROGRAM_STATE_FILE_PATH = os.path.join(PROGRAM_STATE_FOLDER_PATH, 'set.txt')
 DEFAULT_IMAGE_PATH      = os.path.join(DEFAULT_PATH, 'DefaultImage.jpg')
+CLASSIFIER_FILE_PATH    = os.path.join(MODELS_FILES_PATH, 'haarcascade_frontalface_default.xml')
 FISHERFACE_MODEL_PATH   = os.path.join(MODELS_FILES_PATH, 'fisherface_model.xml')
 EIGENFACE_MODEL_PATH    = os.path.join(MODELS_FILES_PATH, 'eigenface_model.xml')
 LBPH_MODEL_PATH         = os.path.join(MODELS_FILES_PATH, 'lbph_model.xml')
@@ -37,11 +36,6 @@ INSTRUCTION_CLASSES_LABEL = '''Replace the class names "s0, s1, ..." with real i
 So, having a list: "s0, s1, s10", assuming that s0 is assigned to the identity "Adam Kowalski", s1 to "Marta Brzdż" and s10 to "Lucyna Puf", then the text "s0, s1, s10" must be replaced by "Adam Kowalski, Marta Brzdż, Lucyna Puf" :'''
 INFO_MUST_CONFIGURE = '''You must configure the program! Go to the face recognition configuration panel and train / load the model'''
 
-# Resources objects
-# from PIL import Image, ImageTk
-# default_image = ImageTk.PhotoImage(Image.open(DEFAULT_IMAGE_PATH))
-
-# Functions
 
 def create_resources_if_they_dont_exists():
     # create folders
