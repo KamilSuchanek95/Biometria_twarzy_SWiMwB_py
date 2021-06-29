@@ -1,11 +1,11 @@
 
 from gui_helper import *
+from detector_and_recognitor import *
+
 import cv2
 from functools import partial
 import tkinter as tki
 from tkinter import messagebox
-from detector_and_recognitor import *
-import ipdb as i
 
 
 

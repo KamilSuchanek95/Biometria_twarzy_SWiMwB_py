@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 
 from gui_helper import *
+from detector_and_recognitor import *
 from configuration_frame import ConfigurationFrame
 from recognition_frame import RecognitionFrame
 from nav_bar import NavBar
-from detector_and_recognitor import *
-
 
 import tkinter as tki
 

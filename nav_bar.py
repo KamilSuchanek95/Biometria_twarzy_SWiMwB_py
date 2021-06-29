@@ -1,9 +1,6 @@
 
-from gui_helper import *
-from functools import partial
 import tkinter as tki
 from functools import partial
-from tkinter import messagebox
 
 class NavBar(tki.Frame):
 
