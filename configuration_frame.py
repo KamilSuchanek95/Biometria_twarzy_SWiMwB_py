@@ -4,7 +4,9 @@ import cv2
 from functools import partial
 import tkinter as tki
 from tkinter import messagebox
-import detector_and_recognitor as s
+from detector_and_recognitor import *
+import ipdb as i
+
 
 
 class ConfigurationFrame(tki.Frame):
@@ -84,9 +86,10 @@ class ConfigurationFrame(tki.Frame):
                 else:
                     with open(parameters_path, 'r') as f: lines = f.readlines()
                     if len(lines)==len(self.controller.recognizer.subjects):
+                        new_lines = []
                         for idx, line in enumerate(lines):
-                            line = ','.join([line.strip(), self.controller.identities[self.controller.recognizer.subjects[idx]]]) + "\n"
-                        with open(parameters_path, 'w') as f: f.writelines(lines)
+                            new_lines.append(','.join([line.strip(), self.controller.identities[self.controller.recognizer.subjects[idx]]]) + "\n")
+                        with open(parameters_path, 'w') as f: f.writelines(new_lines)
                     else:
                         self.resulting_class_entry.insert(0, "Parameters file is wrong!")
             else:
@@ -136,7 +139,7 @@ class ConfigurationFrame(tki.Frame):
             model_path, parameters_path, subjects_path = model_paths
             self.update_subjects_text_entry(subjects_path)
             self.set_eukli_distances_and_identities(parameters_path)
-            self.controller.recognizer = s.Face_recognitor(algorithm)
+            self.controller.recognizer = Face_recognitor(algorithm)
             self.controller.recognizer.read_model(model_path, subjects_path)
             messagebox.showinfo('Load successful', 'Model was loaded!')
         except:
@@ -154,7 +157,7 @@ class ConfigurationFrame(tki.Frame):
     
     def create_model(self):
         # create model object
-        self.controller.recognizer = s.Face_recognitor(self.alg_var.get())
+        self.controller.recognizer = Face_recognitor(self.alg_var.get())
         # train it
         self.controller.recognizer.train_model(self.training_path_entry.get())
         # set subjects

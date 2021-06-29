@@ -1,10 +1,10 @@
 #!/usr/bin/python3
-from typing import Container
+
 from gui_helper import *
 from configuration_frame import ConfigurationFrame
 from recognition_frame import RecognitionFrame
 from nav_bar import NavBar
-import detector_and_recognitor as s
+from detector_and_recognitor import *
 
 
 import tkinter as tki
@@ -33,8 +33,8 @@ class RecognitionApp(tki.Tk):
         self.show_frame(0)
         
         # globals
-        self.detector = s.Face_detector()
-        self.recognizer = s.Face_recognitor()
+        self.detector = Face_detector()
+        self.recognizer = Face_recognitor()
         self.identities = {}
         self.eukli_distances = {}
 
