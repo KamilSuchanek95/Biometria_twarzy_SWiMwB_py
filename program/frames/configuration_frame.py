@@ -135,7 +135,9 @@ class ConfigurationFrame(tki.Frame):
     def load_model(self, algorithm = None):
         if algorithm is None: 
             algorithm = self.alg_var.get()
-        model_path, parameters_path, subjects_path = get_malually_model_data_paths(algorithm)
+            model_path, parameters_path, subjects_path = get_malually_model_data_paths(algorithm)
+        else:
+            model_path, parameters_path, subjects_path = get_model_data_paths_for_algorithm(algorithm)
         try:
             detector = Face_detector(CLASSIFIER_FILE_PATH)
             self.controller.recognizer = Face_recognitor(detector, algorithm)
