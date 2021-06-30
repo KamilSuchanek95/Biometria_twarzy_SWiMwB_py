@@ -42,7 +42,7 @@ class ConfigurationFrame(tki.Frame):
         """# train model or load model """
         self.create_model_button = tki.Button(self, command=self.create_model, text='If You selected necessary paths\nClick and train model', relief='solid')
         self.create_model_button.grid(row=5, column=0, columnspan=2, sticky='nsew')
-        self.create_model_button = tki.Button(self, command=self.manually_load_model, text='Or load model\nfrom file', relief='solid')
+        self.create_model_button = tki.Button(self, command=self.load_model, text='Or load model\nfrom file', relief='solid')
         self.create_model_button.grid(row=5, column=2, columnspan=1, sticky='nsew')
         """# classes of resulting model"""
         self.resulting_classes_label = tki.Message(self, text=INSTRUCTION_CLASSES_LABEL)
@@ -62,7 +62,7 @@ class ConfigurationFrame(tki.Frame):
             messagebox.showinfo('Start program', INFO_MUST_CONFIGURE)
         else:
             self.alg_var.set(is_set_and_algorithm[1])
-            self.load_model_first_time(is_set_and_algorithm[1])
+            self.load_model(is_set_and_algorithm[1])
     
     """# Face recognition configuration metods"""
 
@@ -132,9 +132,11 @@ class ConfigurationFrame(tki.Frame):
         self.resulting_class_entry.delete(0, tki.END)
         self.resulting_class_entry.insert(0, ','.join(self.controller.recognizer.subjects))
 
-    def load_model(self, algorithm, model_paths):
+    def load_model(self, algorithm = None):
+        if algorithm is None: 
+            algorithm = self.alg_var.get()
+        model_path, parameters_path, subjects_path = get_malually_model_data_paths(algorithm)
         try:
-            model_path, parameters_path, subjects_path = model_paths
             detector = Face_detector(CLASSIFIER_FILE_PATH)
             self.controller.recognizer = Face_recognitor(detector, algorithm)
             self.update_subjects_text_entry(subjects_path)
@@ -143,15 +145,6 @@ class ConfigurationFrame(tki.Frame):
             messagebox.showinfo('Load successful', 'Model was loaded!')
         except:
             messagebox.showinfo('Load unsuccessful', 'Wrong selected files')
-    
-    def load_model_first_time(self, algorithm):
-        model_paths = get_model_data_paths_for_algorithm(algorithm)
-        self.load_model(algorithm, model_paths)
-
-    def manually_load_model(self):
-        algorithm = self.alg_var.get()
-        model_paths = get_malually_model_data_paths(algorithm)
-        self.load_model(algorithm, model_paths)
     
     def create_model(self):
         detector = Face_detector(CLASSIFIER_FILE_PATH)
