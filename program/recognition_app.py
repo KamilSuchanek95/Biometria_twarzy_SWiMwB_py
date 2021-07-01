@@ -1,4 +1,4 @@
-from program.helper.gui_helper import *
+from program.helpers.gui_helper import *
 from program.tools.detector_and_recognitor import *
 from program.frames.configuration_frame import ConfigurationFrame
 from program.frames.recognition_frame import RecognitionFrame
@@ -15,7 +15,7 @@ class RecognitionApp(tki.Tk):
         create_resources_if_they_dont_exists()
 
         self.wm_title("Prototyp aplikacji systemu biometrycznego")
-        self.config(background="#004890")
+        self.config(background="#000000")
         self.protocol("WM_DELETE_WINDOW", self.on_close) 
 
         container = tki.Frame(self)

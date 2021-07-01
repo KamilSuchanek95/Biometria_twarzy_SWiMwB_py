@@ -1,5 +1,5 @@
 
-from program.helper.gui_helper import *
+from program.helpers.gui_helper import *
 
 import cv2
 from PIL import Image, ImageTk
@@ -29,7 +29,7 @@ class RecognitionFrame(tki.Frame):
         """# rozdzielacz podglądu od przycisków"""
 
         """# ramka przycisków, aby grupowala je w pionie, nadal w jednym wierszu, który również zawiera podgląd"""
-        self.frame_controls = tki.Frame(self, background="#F55255")
+        self.frame_controls = tki.Frame(self, background="#F88211")
         self.frame_controls.grid(row=0, column=3,columnspan=1, sticky='nsew')
         """# kontrolki w panelu bocznym (ramce)"""
         self.identity_label = tki.Label(self.frame_controls, text = 'Enter Your identity: ', borderwidth=4, relief="groove")
@@ -80,35 +80,34 @@ class RecognitionFrame(tki.Frame):
         # get a photo and save
         # check1, image1 = self.webcam.read()
         ts = datetime.datetime.now()  # grab the current timestamp
-        filename = os.path.join(IMAGES_PATH, self.identity_entry.get() + '_' + "{}.jpg".format(ts.strftime("%Y-%m-%d_%H-%M-%S")))
+        filename = path(IMAGES_PATH, self.identity_entry.get() + '_' + "{}.jpg".format(ts.strftime("%Y-%m-%d_%H-%M-%S")))
         cv2.imwrite(filename=filename, img=self.current_image) # "images/image_object_" + str(id(check1)) + '.jpg'
         # check, that streaming is off
         # self.off = 1
         messagebox.showinfo('Message title', 'The image was saved in ' + filename)
 
+    def print_result(self, eukli_distance, wanted_distance, identity, subject, who):
+        print('eukli_distance:\t\t' + eukli_distance + '\n' +
+              'self.p+val:\t\t' + wanted_distance + '\n' +
+               'entry.ID:\t\t' + identity + '\n' +
+               'subject:\t\t' + subject + '\n' +
+               'self.ID:\t\t' + who)
+
+    def recognition_success(self, subject, eukli_distance):
+        return self.identity_entry.get() == self.controller.identities[subject] and self.controller.eukli_distances[subject] >= eukli_distance
+
     def recognize_face(self):
-        img, p_val, subject = self.controller.recognizer.predict(self.current_image)
-        if img is None:
-            messagebox.showinfo('Recognition imformation', 'No face detected!')
-        else:
-            if self.identity_entry.get() == self.controller.identities[subject] and self.controller.eukli_distances[subject] >= p_val: # z wymaganą dokładnością...
+        img, eukli_distance, subject = self.controller.recognizer.predict(self.current_image)
+        if img is not None:
+            if self.recognition_success(subject, eukli_distance):
                     messagebox.showinfo('Recognition result','You are really ' + self.controller.identities[subject] + '.\nAcces allowed.')
-            elif self.controller.eukli_distances[subject] >= p_val:
-                messagebox.showinfo('Recognition result', 'You are not ' + self.identity_entry.get() + ",\n  But you have been recognized as " + self.controller.identities[subject] + ".\n Access denied.")
-                print('p_val:\t\t' + str(p_val) + '\n' +
-                      'self.p+val:\t\t' + str(self.controller.eukli_distances[subject]) + '\n' +
-                      'entry.ID:\t\t' + self.identity_entry.get() + '\n' +
-                      'subject:\t\t' + subject + '\n' +
-                      'self.ID:\t\t' + self.controller.identities[subject])
             else:
                 messagebox.showinfo('Recognition result','Not recognized approved person\n')
-                print('p_val:\t\t' + str(p_val) + '\n' +
-                      'self.p+val:\t\t' + str(self.controller.eukli_distances[subject]) + '\n' +
-                      'entry.ID:\t\t' + self.identity_entry.get() + '\n' +
-                      'subject:\t\t' + subject + '\n' +
-                      'self.ID:\t\t' + self.controller.identities[subject])
+                self.print_result(str(eukli_distance), str(self.controller.eukli_distances[subject]), self.identity_entry.get(), self.controller.identities[subject])
             ts = datetime.datetime.now()
             filename_date = "{}.jpg".format(ts.strftime("%Y-%m-%d_%H-%M-%S"))
             filename = "recognition_as_" + self.identity_entry.get() + '_recognized_as_' + self.controller.identities[subject] + '_' + filename_date
-            image_path = os.path.join(IMAGES_PATH, filename)
+            image_path = path(IMAGES_PATH, filename)
             cv2.imwrite(filename=image_path, img=self.current_image)
+        else:
+            messagebox.showinfo('Recognition imformation', 'No face detected!')

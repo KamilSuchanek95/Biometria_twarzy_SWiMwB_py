@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 # pip3 install  opencv-contrib-python
+from program.helpers.program_helper import *
+
 import cv2
 import os
-import glob
 import numpy
-
 
 class Face_detector:
 
@@ -57,33 +57,27 @@ class Face_recognitor():
                 'eigenface':    cv2.face.EigenFaceRecognizer_create()
         }
         return switcher.get(algorithm, 'Invalid algorithm name.')
-     
+    
     def load_subjects(self, subjects_path):
-        with open(subjects_path, "r") as f: line = f.readlines()[0]
-        self.subjects = line.split(',')[0:-1]
+        with open(subjects_path, "r") as f: subjects = f.readlines()[0]
+        self.subjects = subjects.split(',')
 
     def create_subjects_file(self, models_path):
-        with open(os.path.join(models_path, self.algorithm + '_subjects.csv'), "w") as file:
-            for n in self.subjects:
-                file.write(n)
-                file.write(',')
+        with open(path(models_path, self.algorithm + '_subjects.csv'), "w") as f: f.write(','.join(self.subjects))
 
     def read_model(self, model_path, subjects_path):
         self.face_recognizer.read(model_path)
         self.load_subjects(subjects_path)
 
     def prepare_training_data(self, training_data_folder_path):
-        dirs = glob.glob(os.path.join(training_data_folder_path, '*'))
-        self.subjects = [os.path.basename(dir) for dir in dirs]
+        self.subjects = listdir_with_glob(training_data_folder_path)
         faces, labels, label = [], [], -1 
-        for dir_name in dirs:
+        for dir_name in self.subjects:
             label += 1
-            subject_dir_path = os.path.join(training_data_folder_path, dir_name)
-            subject_images_dirs = glob.glob(os.path.join(subject_dir_path, '*'))
-            subject_images_names = [os.path.basename(dir) for dir in subject_images_dirs]
+            subject_dir_path = path(training_data_folder_path, dir_name)
+            subject_images_names = listdir_with_glob(subject_dir_path)
             for image_name in subject_images_names:
-                image_path = os.path.join(subject_dir_path, image_name)
-                image = cv2.imread(image_path)
+                image = cv2.imread(path(subject_dir_path, image_name))
                 face = self.face_detector.detect_face(image)
                 if face is not None:
                     if self.roi_must_be_square(self.algorithm):
@@ -98,7 +92,7 @@ class Face_recognitor():
     def train_model(self, training_data_folder_path, models_path):
         faces, labels = self.prepare_training_data(training_data_folder_path)
         self.face_recognizer.train(faces, numpy.array(labels))
-        self.face_recognizer.save(os.path.join(models_path, self.algorithm + '_model' + '.xml'))
+        self.face_recognizer.save(path(models_path, self.algorithm + '_model' + '.xml'))
         self.create_subjects_file(models_path)
 
     def predict(self, image):
@@ -137,7 +131,7 @@ class Face_recognitor():
 #         cv2.destroyAllWindows()
 
 #     def create_image_path(self):
-#         return os.path.join(Camera.IMAGES_PATH, self.name + '_' + str(self.number_or_files_with_name(Camera.IMAGES_PATH) + 1) + '.jpg')
+#         return path(Camera.IMAGES_PATH, self.name + '_' + str(self.number_or_files_with_name(Camera.IMAGES_PATH) + 1) + '.jpg')
 
 #     def number_or_files_with_name(self, dir):
 #         # return len(next(os.walk(dir))[2])

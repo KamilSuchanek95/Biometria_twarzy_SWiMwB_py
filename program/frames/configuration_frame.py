@@ -1,7 +1,10 @@
 
-from program.helper.gui_helper import *
+from program.helpers.program_helper import *
+from program.helpers.gui_helper import *
 from program.tools.detector_and_recognitor import *
 
+import os
+import glob
 import cv2
 from functools import partial
 import tkinter as tki
@@ -94,28 +97,31 @@ class ConfigurationFrame(tki.Frame):
                 messagebox.showinfo('Error entered Ids list','Lengths of IDs list and subjects is not equal')
 
 
+    def create_parameters_file(self, parameters_path, lines):
+        with open(parameters_path, "w") as p: p.writelines(lines)
+
     def test_model(self, test_images_path): # create name_parameters.csv file with {subject,mean p, identity} columns
         parameters_path = get_model_data_paths_for_algorithm(self.controller.recognizer.algorithm)[1]
-        fw = open(parameters_path, "w")
-        for subject in os.listdir(test_images_path):
+        parameters_lines_to_save_later = []
+        dirs_test_images = listdir_with_glob(test_images_path)
+        for subject_images_dir in dirs_test_images:
             eukli_distances = []
-            subject_images_path = os.path.join(test_images_path, subject)
-            for image in os.listdir(subject_images_path):
-                image_path = os.path.join(subject_images_path, image)
-                test_img = cv2.imread(image_path)
+            subject_images = listdir_with_glob(path(test_images_path, subject_images_dir))
+            for image in subject_images:
+                test_img = cv2.imread(path(subject_images, image))
                 predicted_img, eukli_distance, who = self.controller.recognizer.predict(test_img)
-                if predicted_img is None: #if recognize nothing
+                if predicted_img is None: #if recognized nothing
                     continue
-                if who == subject: # if recognize correctly
+                if who == subject_images_dir: # if recognized correctly
                     eukli_distances.append(eukli_distance)
             if len(eukli_distances) > 0:
-                fw.write(subject + ',' + str(max(eukli_distances)) + '\n')
-                self.controller.eukli_distances.update({subject: max(eukli_distances)})
+                parameters_lines_to_save_later.append(subject_images_dir + ',' + str(max(eukli_distances)) + '\n')
+                self.controller.eukli_distances.update({subject_images_dir: max(eukli_distances)})
             else:
-                fw.write(subject + ',' + '0' + '\n')
-                self.controller.eukli_distances.update({subject: 0})
-        fw.close()
-        print('End of testing model')
+                parameters_lines_to_save_later.append(subject_images_dir + ',' + '0' + '\n')
+                self.controller.eukli_distances.update({subject_images_dir: 0})
+        self.create_parameters_file(parameters_path, parameters_lines_to_save_later)
+        print('End of tests.')
 
     def set_eukli_distances_and_identities(self, parameters_path):
         with open(parameters_path, 'r') as f: lines = f.readlines()
@@ -152,10 +158,8 @@ class ConfigurationFrame(tki.Frame):
         detector = Face_detector(CLASSIFIER_FILE_PATH)
         self.controller.recognizer = Face_recognitor(detector, self.alg_var.get())
         self.controller.recognizer.train_model(self.training_path_entry.get(), MODELS_FILES_PATH)
-
         self.resulting_class_entry.delete(0, tki.END)
         self.resulting_class_entry.insert(0, ','.join(self.controller.recognizer.subjects))
-
         self.test_model(self.testing_path_entry.get())
 
     def radio_checked(self): # unnecessary
@@ -163,5 +167,4 @@ class ConfigurationFrame(tki.Frame):
 
     def confirm_model(self):
         messagebox.showinfo('Complete the face recognition configuration','The configuration has been saved, do not manipulate files inside resources folder.')
-        with open(PROGRAM_STATE_FILE_PATH, 'w') as file:
-            file.write('1,' + self.alg_var.get())
+        with open(PROGRAM_STATE_FILE_PATH, 'w') as file: file.write('1,' + self.alg_var.get())
