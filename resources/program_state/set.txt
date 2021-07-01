@@ -1,1 +1,1 @@
-1,lbph
+1,eigenface

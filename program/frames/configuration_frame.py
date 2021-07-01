@@ -108,7 +108,7 @@ class ConfigurationFrame(tki.Frame):
             eukli_distances = []
             subject_images = listdir_with_glob(path(test_images_path, subject_images_dir))
             for image in subject_images:
-                test_img = cv2.imread(path(subject_images, image))
+                test_img = cv2.imread(path(subject_images_dir, image))
                 predicted_img, eukli_distance, who = self.controller.recognizer.predict(test_img)
                 if predicted_img is None: #if recognized nothing
                     continue
@@ -125,8 +125,6 @@ class ConfigurationFrame(tki.Frame):
 
     def set_eukli_distances_and_identities(self, parameters_path):
         with open(parameters_path, 'r') as f: lines = f.readlines()
-        # if len(lines[0].split(',')) < 3:
-        #     return None
         for line in lines:
             params = line.split(',')
             self.controller.eukli_distances.update({params[0]: float(params[1].strip())})

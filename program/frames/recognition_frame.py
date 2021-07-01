@@ -75,15 +75,8 @@ class RecognitionFrame(tki.Frame):
             self.camera_label.config(image = self.init_image)
 
     def get_image(self):
-        # stop the streaming
-        # self.window.after_cancel(self.turnOnCamera)
-        # get a photo and save
-        # check1, image1 = self.webcam.read()
-        ts = datetime.datetime.now()  # grab the current timestamp
-        filename = path(IMAGES_PATH, self.identity_entry.get() + '_' + "{}.jpg".format(ts.strftime("%Y-%m-%d_%H-%M-%S")))
-        cv2.imwrite(filename=filename, img=self.current_image) # "images/image_object_" + str(id(check1)) + '.jpg'
-        # check, that streaming is off
-        # self.off = 1
+        filename = path(IMAGES_PATH, self.identity_entry.get() + '_' + "{}.jpg".format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")))
+        cv2.imwrite(filename=filename, img=self.current_image)
         messagebox.showinfo('Message title', 'The image was saved in ' + filename)
 
     def print_result(self, eukli_distance, wanted_distance, identity, subject, who):
@@ -104,10 +97,7 @@ class RecognitionFrame(tki.Frame):
             else:
                 messagebox.showinfo('Recognition result','Not recognized approved person\n')
                 self.print_result(str(eukli_distance), str(self.controller.eukli_distances[subject]), self.identity_entry.get(), self.controller.identities[subject])
-            ts = datetime.datetime.now()
-            filename_date = "{}.jpg".format(ts.strftime("%Y-%m-%d_%H-%M-%S"))
-            filename = "recognition_as_" + self.identity_entry.get() + '_recognized_as_' + self.controller.identities[subject] + '_' + filename_date
-            image_path = path(IMAGES_PATH, filename)
-            cv2.imwrite(filename=image_path, img=self.current_image)
+            filename = "recognition_as_" + self.identity_entry.get() + '_recognized_as_' + self.controller.identities[subject] + '_' + "{}.jpg".format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+            cv2.imwrite(filename=path(IMAGES_PATH, filename), img=self.current_image)
         else:
             messagebox.showinfo('Recognition imformation', 'No face detected!')
